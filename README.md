@@ -4,7 +4,7 @@ Track how **ChatGPT, Perplexity, Gemini, Claude and Grok** answer the questions 
 
 Self-hosted, open source, and deliberately small. One Vercel AI Gateway key covers every platform, each platform answers with its **own native web search**, and the whole thing deploys to Vercel with one click.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fsearcherries%2Fai-visibility-tracker&project-name=ai-visibility-tracker&repository-name=ai-visibility-tracker&env=ADMIN_PASSWORD,CRON_SECRET&envDescription=ADMIN_PASSWORD%20protects%20the%20dashboard.%20CRON_SECRET%20protects%20the%20daily%20check%20%28any%20long%20random%20string%29.&envLink=https%3A%2F%2Fgithub.com%2Fsearcherries%2Fai-visibility-tracker%23configuration&products=%5B%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22neon%22%2C%22integrationSlug%22%3A%22neon%22%7D%5D)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Feduardmur%2Fai-visibility-tracker&project-name=ai-visibility-tracker&repository-name=ai-visibility-tracker&env=ADMIN_PASSWORD,CRON_SECRET&envDescription=ADMIN_PASSWORD%20protects%20the%20dashboard.%20CRON_SECRET%20protects%20the%20daily%20check%20%28any%20long%20random%20string%29.&envLink=https%3A%2F%2Fgithub.com%2Feduardmur%2Fai-visibility-tracker%23configuration&products=%5B%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22neon%22%2C%22integrationSlug%22%3A%22neon%22%7D%5D)
 
 ## What you get
 
@@ -31,7 +31,7 @@ No AI key is needed on Vercel: the app authenticates to the [AI Gateway](https:/
 ## Run it locally
 
 ```bash
-git clone https://github.com/searcherries/ai-visibility-tracker
+git clone https://github.com/eduardmur/ai-visibility-tracker
 cd ai-visibility-tracker
 npm install
 cp .env.example .env.local   # set ADMIN_PASSWORD and AI_GATEWAY_API_KEY
