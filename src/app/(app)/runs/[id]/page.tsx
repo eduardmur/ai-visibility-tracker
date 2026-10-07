@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { PageHeader } from "@/components/blocks";
 import { RunProgressView } from "@/components/run-progress";
-import { PageHeader } from "@/components/ui";
 import { getDb } from "@/lib/db";
 import { fmtDateTime } from "@/lib/format";
 import { getBrand } from "@/lib/queries/brand";

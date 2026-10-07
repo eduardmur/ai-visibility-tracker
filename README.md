@@ -129,6 +129,8 @@ npm run typecheck
 npm run lint
 ```
 
+The UI is [shadcn/ui](https://ui.shadcn.com) (neutral palette, Radix primitives) with the [Geist](https://vercel.com/font) font and a system/light/dark theme switch; the trend chart is a small hand-written SVG so the only chart dependency is React.
+
 The code is organised so the moving parts stay separate:
 
 - `src/lib/ai/` talks to the models (provider selection, per-platform tools, prompts, source normalisation, extraction).
@@ -136,6 +138,7 @@ The code is organised so the moving parts stay separate:
 - `src/lib/runs/` creates and processes checks.
 - `src/lib/queries/` reads the database for the pages.
 - `src/app/` is the Next.js App Router UI, with server actions in `src/app/actions/` and route handlers in `src/app/api/`.
+- `src/components/ui/` holds the shadcn/ui primitives; `src/components/blocks.tsx` the few composites built on them.
 
 Contributions are welcome. Keep the project small: one key, one code path per platform, numbers reproducible from the stored answers.
 

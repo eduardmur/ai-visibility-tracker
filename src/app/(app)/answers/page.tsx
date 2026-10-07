@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { asc, eq } from "drizzle-orm";
-import { Badge, Button, Card, PageHeader, Select, table } from "@/components/ui";
+import { Download } from "lucide-react";
+import Link from "next/link";
+import { Muted, PageHeader, TABLE_INSET, TextLink } from "@/components/blocks";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getDb } from "@/lib/db";
 import { questions } from "@/lib/db/schema";
 import { fmtDateTime, fmtPosition, truncate } from "@/lib/format";
@@ -52,126 +59,142 @@ export default async function AnswersPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageHeader title="Answers" description="Every stored answer, with the brands it names and the sources it cites." />
+      <PageHeader
+        title="Answers"
+        description="Every stored answer, with the brands it names and the sources it cites."
+        actions={
+          <Button asChild variant="outline" size="sm">
+            <a href={`/api/export/answers?period=${period}`}>
+              <Download data-icon="inline-start" />
+              CSV
+            </a>
+          </Button>
+        }
+      />
 
       <form method="get" className="mb-4 flex flex-wrap items-end gap-3">
-        <div className="w-32">
-          <label className="mb-1 block text-xs text-ink-3" htmlFor="period">
-            Period
-          </label>
-          <Select id="period" name="period" defaultValue={period}>
-            {PERIODS.map((p) => (
-              <option key={p.key} value={p.key}>
-                {p.label}
-              </option>
-            ))}
+        <div className="grid w-32 gap-1.5">
+          <Label htmlFor="period">Period</Label>
+          <Select name="period" defaultValue={period}>
+            <SelectTrigger id="period" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PERIODS.map((p) => (
+                <SelectItem key={p.key} value={p.key}>
+                  {p.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
         </div>
-        <div className="w-40">
-          <label className="mb-1 block text-xs text-ink-3" htmlFor="platform">
-            Platform
-          </label>
-          <Select id="platform" name="platform" defaultValue={platform ?? ""}>
-            <option value="">All platforms</option>
-            {PLATFORM_IDS.map((id) => (
-              <option key={id} value={id}>
-                {PLATFORMS[id].label}
-              </option>
-            ))}
+        <div className="grid w-40 gap-1.5">
+          <Label htmlFor="platform">Platform</Label>
+          <Select name="platform" defaultValue={platform ?? "all"}>
+            <SelectTrigger id="platform" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All platforms</SelectItem>
+              {PLATFORM_IDS.map((id) => (
+                <SelectItem key={id} value={id}>
+                  {PLATFORMS[id].label}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
         </div>
-        <div className="w-72">
-          <label className="mb-1 block text-xs text-ink-3" htmlFor="questionId">
-            Question
-          </label>
-          <Select id="questionId" name="questionId" defaultValue={questionId ? String(questionId) : ""}>
-            <option value="">All questions</option>
-            {questionRows.map((q) => (
-              <option key={q.id} value={q.id}>
-                {truncate(q.text, 60)}
-              </option>
-            ))}
+        <div className="grid w-72 gap-1.5">
+          <Label htmlFor="questionId">Question</Label>
+          <Select name="questionId" defaultValue={questionId ? String(questionId) : "all"}>
+            <SelectTrigger id="questionId" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All questions</SelectItem>
+              {questionRows.map((q) => (
+                <SelectItem key={q.id} value={String(q.id)}>
+                  {truncate(q.text, 60)}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
         </div>
-        <div className="w-40">
-          <label className="mb-1 block text-xs text-ink-3" htmlFor="mentioned">
-            Brand
-          </label>
-          <Select id="mentioned" name="mentioned" defaultValue={mentioned ?? ""}>
-            <option value="">Any</option>
-            <option value="yes">Mentioned</option>
-            <option value="no">Not mentioned</option>
+        <div className="grid w-40 gap-1.5">
+          <Label htmlFor="mentioned">Brand</Label>
+          <Select name="mentioned" defaultValue={mentioned ?? "any"}>
+            <SelectTrigger id="mentioned" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="any">Any</SelectItem>
+              <SelectItem value="yes">Mentioned</SelectItem>
+              <SelectItem value="no">Not mentioned</SelectItem>
+            </SelectContent>
           </Select>
         </div>
-        <Button type="submit" variant="secondary">
+        <Button type="submit" variant="outline">
           Filter
         </Button>
-        <a href={`/api/export/answers?period=${period}`} className="ml-auto text-sm text-ink-2 underline-offset-2 hover:text-ink hover:underline">
-          Export CSV
-        </a>
       </form>
 
-      <Card>
+      <Card className="py-0">
         {rows.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-ink-3">No answers match these filters.</p>
+          <Muted className="px-6 py-8 text-center">No answers match these filters.</Muted>
         ) : (
-          <div className={table.wrap}>
-            <table className={table.table}>
-              <thead>
-                <tr>
-                  <th className={table.th}>Date</th>
-                  <th className={table.th}>Question</th>
-                  <th className={table.th}>Platform</th>
-                  <th className={table.th}>Brand</th>
-                  <th className={table.thRight}>Position</th>
-                  <th className={table.thRight}>Brands</th>
-                  <th className={table.thRight}>Sources</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.id} className={table.tr}>
-                    <td className={`${table.tdMuted} whitespace-nowrap`}>
-                      <Link href={`/answers/${row.id}`} className="text-ink underline-offset-2 hover:underline">
-                        {fmtDateTime(row.completedAt ?? null)}
-                      </Link>
-                    </td>
-                    <td className={table.td}>{truncate(row.questionText, 80)}</td>
-                    <td className={table.tdMuted}>{platformLabel(row.platform)}</td>
-                    <td className={table.td}>
-                      {row.status === "done" ? (
-                        <span className="flex flex-wrap gap-1">
-                          <Badge variant={row.brandMentioned ? "solid" : "outline"}>{row.brandMentioned ? "Mentioned" : "Not mentioned"}</Badge>
-                          {row.brandCited ? <Badge variant="outline">Cited</Badge> : null}
-                        </span>
-                      ) : (
-                        <Badge variant="muted" className="capitalize">
-                          {row.status}
-                        </Badge>
-                      )}
-                    </td>
-                    <td className={table.tdRight}>{fmtPosition(row.brandPosition)}</td>
-                    <td className={table.tdRight}>{row.brandsNamed}</td>
-                    <td className={table.tdRight}>{row.sourcesCount}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table className={TABLE_INSET}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Question</TableHead>
+                <TableHead>Platform</TableHead>
+                <TableHead>Brand</TableHead>
+                <TableHead className="text-right">Position</TableHead>
+                <TableHead className="text-right">Brands</TableHead>
+                <TableHead className="text-right">Sources</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row) => (
+                <TableRow key={row.id}>
+                  <TableCell>
+                    <TextLink href={`/answers/${row.id}`}>{fmtDateTime(row.completedAt ?? null)}</TextLink>
+                  </TableCell>
+                  <TableCell className="whitespace-normal">{truncate(row.questionText, 80)}</TableCell>
+                  <TableCell className="text-muted-foreground">{platformLabel(row.platform)}</TableCell>
+                  <TableCell>
+                    {row.status === "done" ? (
+                      <span className="flex flex-wrap gap-1">
+                        <Badge variant={row.brandMentioned ? "default" : "outline"}>{row.brandMentioned ? "Mentioned" : "Not mentioned"}</Badge>
+                        {row.brandCited ? <Badge variant="outline">Cited</Badge> : null}
+                      </span>
+                    ) : (
+                      <Badge variant="secondary" className="capitalize">
+                        {row.status}
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="num text-right">{fmtPosition(row.brandPosition)}</TableCell>
+                  <TableCell className="num text-right">{row.brandsNamed}</TableCell>
+                  <TableCell className="num text-right">{row.sourcesCount}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
         {pages > 1 ? (
-          <div className="flex items-center justify-between border-t border-line px-5 py-3 text-sm text-ink-2">
+          <div className="flex items-center justify-between border-t px-6 py-3 text-sm text-muted-foreground">
             <span className="num">
               Page {page} of {pages} · {total} answers
             </span>
             <span className="flex gap-3">
               {page > 1 ? (
-                <Link href={pageLink(page - 1)} className="underline-offset-2 hover:text-ink hover:underline">
+                <Link href={pageLink(page - 1)} className="underline-offset-4 hover:text-foreground hover:underline">
                   Previous
                 </Link>
               ) : null}
               {page < pages ? (
-                <Link href={pageLink(page + 1)} className="underline-offset-2 hover:text-ink hover:underline">
+                <Link href={pageLink(page + 1)} className="underline-offset-4 hover:text-foreground hover:underline">
                   Next
                 </Link>
               ) : null}

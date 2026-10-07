@@ -9,7 +9,8 @@ export function fmtDelta(value: number | null | undefined): string | null {
 }
 
 export function fmtPosition(value: number | null | undefined): string {
-  return value === null || value === undefined ? "—" : `#${value.toFixed(1)}`;
+  if (value === null || value === undefined) return "—";
+  return Number.isInteger(value) ? `#${value}` : `#${value.toFixed(1)}`;
 }
 
 export function fmtInt(value: number): string {

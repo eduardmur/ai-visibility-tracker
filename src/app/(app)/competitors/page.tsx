@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Badge, Card, CardHeader, PageHeader, PeriodSelect, table } from "@/components/ui";
+import { Muted, PageHeader, PeriodSelect, Section, TABLE_INSET, TextLink } from "@/components/blocks";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getDb } from "@/lib/db";
 import { fmtDate, fmtPct, fmtPosition } from "@/lib/format";
 import { platformLabel } from "@/lib/platforms";
@@ -29,74 +30,70 @@ export default async function CompetitorsPage({ searchParams }: { searchParams: 
         actions={<PeriodSelect current={period} basePath="/competitors" />}
       />
 
-      <Card>
-        <CardHeader title={`Brands named in ${answers.length} answers`} description="Share is the proportion of answers naming the brand." />
+      <Section title={`Brands named in ${answers.length} answers`} description="Share is the proportion of answers naming the brand." flush>
         {competitors.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-ink-3">No competitors in this period.</p>
+          <Muted className="px-6 py-6 text-center">No competitors in this period.</Muted>
         ) : (
-          <div className={table.wrap}>
-            <table className={table.table}>
-              <thead>
-                <tr>
-                  <th className={table.th}>Brand</th>
-                  <th className={table.thRight}>Answers</th>
-                  <th className={table.thRight}>Share</th>
-                  <th className={table.thRight}>Position</th>
-                  <th className={table.thRight}>Recommended</th>
-                  <th className={table.th}>Sentiment</th>
-                  <th className={table.th}>Platforms</th>
-                  <th className={table.th}>Last seen</th>
-                </tr>
-              </thead>
-              <tbody>
-                {competitors.map((c) => (
-                  <tr key={c.key} className={table.tr}>
-                    <td className={table.td}>
-                      <Link href={`/competitors/${encodeURIComponent(c.key)}?period=${period}`} className="font-medium underline-offset-2 hover:underline">
-                        {c.name}
-                      </Link>
-                      {c.website ? <p className="text-xs text-ink-3">{c.website}</p> : null}
-                    </td>
-                    <td className={table.tdRight}>{c.answers}</td>
-                    <td className={table.tdRight}>{fmtPct(c.share)}</td>
-                    <td className={table.tdRight}>{fmtPosition(c.avgPosition)}</td>
-                    <td className={table.tdRight}>{c.recommended}</td>
-                    <td className={`${table.tdMuted} num whitespace-nowrap`}>
-                      {c.sentiment.positive} + · {c.sentiment.neutral} = · {c.sentiment.negative} −
-                    </td>
-                    <td className={table.tdMuted}>
-                      {Object.entries(c.platforms)
-                        .map(([p, n]) => `${platformLabel(p)} ${n}`)
-                        .join(" · ")}
-                    </td>
-                    <td className={`${table.tdMuted} whitespace-nowrap`}>{fmtDate(c.lastSeenAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table className={TABLE_INSET}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Brand</TableHead>
+                <TableHead className="text-right">Answers</TableHead>
+                <TableHead className="text-right">Share</TableHead>
+                <TableHead className="text-right">Position</TableHead>
+                <TableHead className="text-right">Recommended</TableHead>
+                <TableHead>Sentiment</TableHead>
+                <TableHead>Platforms</TableHead>
+                <TableHead>Last seen</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {competitors.map((c) => (
+                <TableRow key={c.key}>
+                  <TableCell>
+                    <TextLink href={`/competitors/${encodeURIComponent(c.key)}?period=${period}`} className="font-medium">
+                      {c.name}
+                    </TextLink>
+                    {c.website ? <p className="text-xs text-muted-foreground">{c.website}</p> : null}
+                  </TableCell>
+                  <TableCell className="num text-right">{c.answers}</TableCell>
+                  <TableCell className="num text-right">{fmtPct(c.share)}</TableCell>
+                  <TableCell className="num text-right">{fmtPosition(c.avgPosition)}</TableCell>
+                  <TableCell className="num text-right">{c.recommended}</TableCell>
+                  <TableCell className="num text-muted-foreground">
+                    {c.sentiment.positive} pos · {c.sentiment.neutral} neu · {c.sentiment.negative} neg
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {Object.entries(c.platforms)
+                      .map(([p, n]) => `${platformLabel(p)} ${n}`)
+                      .join(" · ")}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{fmtDate(c.lastSeenAt)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
-      </Card>
+      </Section>
 
-      <Card className="mt-6">
-        <CardHeader title={`What the platforms say about ${brand.name}`} description="Statements extracted from answers that name your brand." />
+      <Section className="mt-6" title={`What the platforms say about ${brand.name}`} description="Statements extracted from answers that name your brand." flush>
         {ownHighlights.length === 0 ? (
-          <p className="px-5 py-5 text-sm text-ink-3">Nothing yet in this period.</p>
+          <Muted className="px-6">Nothing yet in this period.</Muted>
         ) : (
-          <ul className="divide-y divide-line">
+          <ul className="divide-y">
             {ownHighlights.map((h) => (
-              <li key={`${h.answerId}`} className="px-5 py-3 text-sm">
-                <div className="flex flex-wrap items-center gap-2 text-xs text-ink-3">
+              <li key={`${h.answerId}`} className="px-6 py-3 text-sm">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <span>{platformLabel(h.platform)}</span>
                   <span>·</span>
                   <span>{fmtDate(h.completedAt)}</span>
                   <Badge variant="outline">{h.sentiment}</Badge>
                   {h.recommended ? <Badge variant="outline">recommended</Badge> : null}
-                  <Link href={`/answers/${h.answerId}`} className="underline-offset-2 hover:text-ink hover:underline">
+                  <TextLink href={`/answers/${h.answerId}`} muted>
                     {h.questionText}
-                  </Link>
+                  </TextLink>
                 </div>
-                <ul className="mt-1 space-y-0.5 text-ink">
+                <ul className="mt-1 space-y-0.5">
                   {h.highlights.map((text) => (
                     <li key={text}>{text}</li>
                   ))}
@@ -105,7 +102,7 @@ export default async function CompetitorsPage({ searchParams }: { searchParams: 
             ))}
           </ul>
         )}
-      </Card>
+      </Section>
     </>
   );
 }

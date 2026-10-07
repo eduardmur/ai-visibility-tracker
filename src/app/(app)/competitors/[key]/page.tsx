@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Badge, Card, CardHeader, PageHeader, PeriodSelect, Stat } from "@/components/ui";
+import { Muted, PageHeader, PeriodSelect, Section, Stat, TextLink } from "@/components/blocks";
+import { Badge } from "@/components/ui/badge";
 import { getDb } from "@/lib/db";
 import { fmtDate, fmtPct, fmtPosition } from "@/lib/format";
 import { platformLabel } from "@/lib/platforms";
@@ -38,9 +38,9 @@ export default async function CompetitorPage({
         actions={
           <>
             <PeriodSelect current={period} basePath={`/competitors/${encodeURIComponent(key)}`} />
-            <Link href={`/competitors?period=${period}`} className="text-sm text-ink-2 underline-offset-2 hover:text-ink hover:underline">
+            <TextLink href={`/competitors?period=${period}`} muted>
               All competitors
-            </Link>
+            </TextLink>
           </>
         }
       />
@@ -56,9 +56,8 @@ export default async function CompetitorPage({
         />
       </div>
 
-      <Card className="mt-6">
-        <CardHeader title="By platform" />
-        <ul className="flex flex-wrap gap-2 px-5 py-4">
+      <Section className="mt-6" title="By platform">
+        <ul className="flex flex-wrap gap-2">
           {Object.entries(summary.platforms).map(([platform, count]) => (
             <li key={platform}>
               <Badge variant="outline">
@@ -67,37 +66,36 @@ export default async function CompetitorPage({
             </li>
           ))}
         </ul>
-      </Card>
+      </Section>
 
-      <Card className="mt-6">
-        <CardHeader title="What the platforms said" description="Newest first. Each entry links to the full answer." />
-        <ul className="divide-y divide-line">
+      <Section className="mt-6" title="What the platforms said" description="Newest first. Each entry links to the full answer." flush>
+        <ul className="divide-y">
           {highlights.map((h) => (
-            <li key={`${h.answerId}-${h.platform}`} className="px-5 py-3 text-sm">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-ink-3">
+            <li key={`${h.answerId}-${h.platform}`} className="px-6 py-3 text-sm">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <span>{platformLabel(h.platform)}</span>
                 <span>·</span>
                 <span>{fmtDate(h.completedAt)}</span>
                 {h.position ? <span className="num">#{h.position}</span> : null}
                 <Badge variant="outline">{h.sentiment}</Badge>
                 {h.recommended ? <Badge variant="outline">recommended</Badge> : null}
-                <Link href={`/answers/${h.answerId}`} className="underline-offset-2 hover:text-ink hover:underline">
+                <TextLink href={`/answers/${h.answerId}`} muted>
                   {h.questionText}
-                </Link>
+                </TextLink>
               </div>
               {h.highlights.length > 0 ? (
-                <ul className="mt-1 space-y-0.5 text-ink">
+                <ul className="mt-1 space-y-0.5">
                   {h.highlights.map((text) => (
                     <li key={text}>{text}</li>
                   ))}
                 </ul>
               ) : (
-                <p className="mt-1 text-ink-3">Named without details.</p>
+                <Muted className="mt-1">Named without details.</Muted>
               )}
             </li>
           ))}
         </ul>
-      </Card>
+      </Section>
     </>
   );
 }

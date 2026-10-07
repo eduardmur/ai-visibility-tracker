@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import { asc, eq } from "drizzle-orm";
 import { updateQuestion } from "@/app/actions/questions";
 import { startRun } from "@/app/actions/runs";
+import { Muted, Notice, PageHeader, Section, TABLE_INSET } from "@/components/blocks";
 import { QuestionForm } from "@/components/question-form";
-import { Badge, Button, Card, CardHeader, Notice, PageHeader, table } from "@/components/ui";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { questionBreakdown } from "@/lib/analysis/scoring";
 import { getDb } from "@/lib/db";
 import { questions } from "@/lib/db/schema";
@@ -14,6 +17,19 @@ import { periodRange } from "@/lib/queries/period";
 import { listRuns } from "@/lib/queries/runs";
 
 export const metadata: Metadata = { title: "Questions" };
+
+function RowAction({ id, intent, label, cadence }: { id: number; intent: string; label: string; cadence?: string }) {
+  return (
+    <form action={updateQuestion} className="inline">
+      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="intent" value={intent} />
+      {cadence ? <input type="hidden" name="cadence" value={cadence} /> : null}
+      <Button type="submit" variant="link" size="xs" className="h-auto px-0 text-muted-foreground hover:text-foreground">
+        {label}
+      </Button>
+    </form>
+  );
+}
 
 export default async function QuestionsPage({ searchParams }: { searchParams: Promise<{ welcome?: string }> }) {
   const { welcome } = await searchParams;
@@ -39,87 +55,62 @@ export default async function QuestionsPage({ searchParams }: { searchParams: Pr
 
       {welcome ? (
         <Notice className="mb-6">
-          <span className="font-medium text-ink">Step 2 of 2.</span> Add a few questions your customers would ask an AI assistant, then run the first check.
+          <span className="font-medium text-foreground">Step 2 of 2.</span> Add a few questions your customers would ask an AI assistant, then run the first check.
         </Notice>
       ) : null}
 
-      <Card>
-        <CardHeader title="Add questions" />
-        <div className="px-5 py-5">
-          <QuestionForm autoFocus={Boolean(welcome)} />
-        </div>
-      </Card>
+      <Section title="Add questions">
+        <QuestionForm autoFocus={Boolean(welcome)} />
+      </Section>
 
-      <Card className="mt-6">
-        <CardHeader title={`Tracked questions (${rows.length})`} description="Score is the share of answers mentioning the brand, last 30 days." />
+      <Section className="mt-6" title={`Tracked questions (${rows.length})`} description="Score is the share of answers mentioning the brand, last 30 days." flush>
         {rows.length === 0 ? (
-          <p className="px-5 py-5 text-sm text-ink-3">No questions yet.</p>
+          <Muted className="px-6">No questions yet.</Muted>
         ) : (
-          <div className={table.wrap}>
-            <table className={table.table}>
-              <thead>
-                <tr>
-                  <th className={table.th}>Question</th>
-                  <th className={table.th}>Cadence</th>
-                  <th className={table.thRight}>Score</th>
-                  <th className={table.th}>Last run</th>
-                  <th className={table.th}>
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((q) => {
-                  const stat = stats.get(q.id);
-                  return (
-                    <tr key={q.id} className={table.tr}>
-                      <td className={table.td}>
-                        {q.text}
-                        {!q.isActive ? (
-                          <Badge variant="muted" className="ml-2">
-                            paused
-                          </Badge>
-                        ) : null}
-                      </td>
-                      <td className={table.tdMuted}>
-                        <form action={updateQuestion} className="inline">
-                          <input type="hidden" name="id" value={q.id} />
-                          <input type="hidden" name="intent" value="cadence" />
-                          <input type="hidden" name="cadence" value={q.cadence === "daily" ? "weekly" : "daily"} />
-                          <button type="submit" className="underline-offset-2 hover:text-ink hover:underline" title="Switch cadence">
-                            {q.cadence}
-                          </button>
-                        </form>
-                      </td>
-                      <td className={table.tdRight}>
-                        {fmtPct(stat?.score ?? null)}
-                        {stat ? <span className="ml-1 text-xs text-ink-3">{stat.answers}</span> : null}
-                      </td>
-                      <td className={table.tdMuted}>{fmtRelative(q.lastRunAt)}</td>
-                      <td className={`${table.td} whitespace-nowrap text-right`}>
-                        <form action={updateQuestion} className="inline">
-                          <input type="hidden" name="id" value={q.id} />
-                          <input type="hidden" name="intent" value="toggle" />
-                          <button type="submit" className="text-ink-2 underline-offset-2 hover:text-ink hover:underline">
-                            {q.isActive ? "Pause" : "Resume"}
-                          </button>
-                        </form>
-                        <form action={updateQuestion} className="ml-3 inline">
-                          <input type="hidden" name="id" value={q.id} />
-                          <input type="hidden" name="intent" value="delete" />
-                          <button type="submit" className="text-ink-2 underline-offset-2 hover:text-ink hover:underline">
-                            Delete
-                          </button>
-                        </form>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <Table className={TABLE_INSET}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Question</TableHead>
+                <TableHead>Cadence</TableHead>
+                <TableHead className="text-right">Score</TableHead>
+                <TableHead>Last run</TableHead>
+                <TableHead className="text-right">
+                  <span className="sr-only">Actions</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((q) => {
+                const stat = stats.get(q.id);
+                return (
+                  <TableRow key={q.id}>
+                    <TableCell className="whitespace-normal">
+                      {q.text}
+                      {!q.isActive ? (
+                        <Badge variant="secondary" className="ml-2">
+                          paused
+                        </Badge>
+                      ) : null}
+                    </TableCell>
+                    <TableCell>
+                      <RowAction id={q.id} intent="cadence" cadence={q.cadence === "daily" ? "weekly" : "daily"} label={q.cadence} />
+                    </TableCell>
+                    <TableCell className="num text-right">
+                      {fmtPct(stat?.score ?? null)}
+                      {stat ? <span className="ml-1 text-xs text-muted-foreground">{stat.answers}</span> : null}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{fmtRelative(q.lastRunAt)}</TableCell>
+                    <TableCell className="space-x-3 text-right">
+                      <RowAction id={q.id} intent="toggle" label={q.isActive ? "Pause" : "Resume"} />
+                      <RowAction id={q.id} intent="delete" label="Delete" />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         )}
-      </Card>
+      </Section>
     </>
   );
 }

@@ -2,7 +2,9 @@
 
 import { useActionState } from "react";
 import { login, type LoginState } from "@/app/actions/auth";
-import { Button, Field, Input } from "./ui";
+import { Field } from "@/components/blocks";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const initialState: LoginState = { error: null };
 
@@ -14,7 +16,7 @@ export function LoginForm({ next }: { next: string }) {
       <Field label="Password" htmlFor="password">
         <Input id="password" name="password" type="password" required autoFocus autoComplete="current-password" />
       </Field>
-      {state.error ? <p className="text-sm text-ink">{state.error}</p> : null}
+      {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Signing in…" : "Sign in"}
       </Button>

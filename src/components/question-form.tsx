@@ -2,7 +2,10 @@
 
 import { useActionState } from "react";
 import { addQuestions, type QuestionFormState } from "@/app/actions/questions";
-import { Button, Field, Select, Textarea } from "./ui";
+import { Field } from "@/components/blocks";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 const initialState: QuestionFormState = { error: null, added: 0 };
 
@@ -21,20 +24,25 @@ export function QuestionForm({ autoFocus = false }: { autoFocus?: boolean }) {
         />
       </Field>
       <div className="flex flex-wrap items-end gap-3">
-        <div className="w-44">
+        <div className="w-40">
           <Field label="Check" htmlFor="cadence">
-            <Select id="cadence" name="cadence" defaultValue="daily">
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
+            <Select name="cadence" defaultValue="daily">
+              <SelectTrigger id="cadence" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="daily">Daily</SelectItem>
+                <SelectItem value="weekly">Weekly</SelectItem>
+              </SelectContent>
             </Select>
           </Field>
         </div>
         <Button type="submit" disabled={pending}>
           {pending ? "Adding…" : "Add questions"}
         </Button>
-        {state.error ? <p className="text-sm text-ink">{state.error}</p> : null}
+        {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
         {state.added > 0 && !state.error ? (
-          <p className="text-sm text-ink-2">
+          <p className="text-sm text-muted-foreground">
             Added {state.added} question{state.added === 1 ? "" : "s"}.
           </p>
         ) : null}

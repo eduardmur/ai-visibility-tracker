@@ -3,9 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { resumeRun } from "@/app/actions/runs";
+import { TABLE_INSET } from "@/components/blocks";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { platformLabel } from "@/lib/platforms";
 import type { RunProgress } from "@/lib/queries/runs";
-import { Badge, Button, LinkButton, table } from "./ui";
 
 const POLL_MS = 3000;
 
@@ -39,74 +44,72 @@ export function RunProgressView({ initial }: { initial: RunProgress }) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-line bg-paper px-5 py-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-ink-2">
-            <span className="num font-medium text-ink">
-              {finished} / {run.totalItems}
-            </span>{" "}
-            answers · {run.failedItems > 0 ? `${run.failedItems} failed · ` : ""}
-            {statusLabel(run.status)}
-          </p>
-          {active ? (
-            <span className="text-xs text-ink-3">Updates every few seconds</span>
-          ) : (
-            <LinkButton href="/" variant="primary">
-              View report
-            </LinkButton>
-          )}
-        </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-paper-3" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-          <div className="h-full rounded-full bg-ink transition-[width]" style={{ width: `${pct}%` }} />
-        </div>
-        {stalled ? (
-          <form action={resumeRun} className="mt-3 flex items-center gap-3 text-sm text-ink-2">
-            <input type="hidden" name="runId" value={run.id} />
-            <span>Nothing is being processed right now.</span>
-            <Button type="submit" variant="secondary">
-              Resume
-            </Button>
-          </form>
-        ) : null}
-      </div>
+      <Card size="sm">
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              <span className="num font-medium text-foreground">
+                {finished} / {run.totalItems}
+              </span>{" "}
+              answers · {run.failedItems > 0 ? `${run.failedItems} failed · ` : ""}
+              {statusLabel(run.status)}
+            </p>
+            {active ? (
+              <span className="text-xs text-muted-foreground">Updates every few seconds</span>
+            ) : (
+              <Button asChild size="sm">
+                <Link href="/">View report</Link>
+              </Button>
+            )}
+          </div>
+          <Progress value={pct} aria-label="Run progress" />
+          {stalled ? (
+            <form action={resumeRun} className="flex items-center gap-3 text-sm text-muted-foreground">
+              <input type="hidden" name="runId" value={run.id} />
+              <span>Nothing is being processed right now.</span>
+              <Button type="submit" variant="outline" size="sm">
+                Resume
+              </Button>
+            </form>
+          ) : null}
+        </CardContent>
+      </Card>
 
-      <div className="rounded-xl border border-line bg-paper">
-        <div className={table.wrap}>
-          <table className={table.table}>
-            <thead>
-              <tr>
-                <th className={table.th}>Question</th>
-                <th className={table.th}>Platform</th>
-                <th className={table.th}>Status</th>
-                <th className={table.th}>Result</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id} className={table.tr}>
-                  <td className={table.td}>{item.questionText}</td>
-                  <td className={table.tdMuted}>{platformLabel(item.platform)}</td>
-                  <td className={table.td}>
-                    <Badge variant={item.status === "done" ? "outline" : "muted"}>{statusLabel(item.status)}</Badge>
-                  </td>
-                  <td className={table.tdMuted}>
-                    {item.status === "done" ? (
-                      <Link href={`/answers/${item.id}`} className="text-ink underline-offset-2 hover:underline">
-                        {item.brandMentioned ? "Mentioned" : "Not mentioned"}
-                        {item.brandCited ? " · cited" : ""}
-                      </Link>
-                    ) : item.status === "failed" ? (
-                      <span title={item.error ?? undefined}>{item.error ? truncate(item.error) : "Failed"}</span>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <Card className="py-0">
+        <Table className={TABLE_INSET}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Question</TableHead>
+              <TableHead>Platform</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Result</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell className="whitespace-normal">{item.questionText}</TableCell>
+                <TableCell className="text-muted-foreground">{platformLabel(item.platform)}</TableCell>
+                <TableCell>
+                  <Badge variant={item.status === "done" ? "outline" : "secondary"}>{statusLabel(item.status)}</Badge>
+                </TableCell>
+                <TableCell className="whitespace-normal text-muted-foreground">
+                  {item.status === "done" ? (
+                    <Link href={`/answers/${item.id}`} className="text-foreground underline-offset-4 hover:underline">
+                      {item.brandMentioned ? "Mentioned" : "Not mentioned"}
+                      {item.brandCited ? " · cited" : ""}
+                    </Link>
+                  ) : item.status === "failed" ? (
+                    <span title={item.error ?? undefined}>{item.error ? truncate(item.error) : "Failed"}</span>
+                  ) : (
+                    "—"
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 }

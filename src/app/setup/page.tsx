@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { BrandForm } from "@/components/brand-form";
+import { Card, CardContent } from "@/components/ui/card";
 import { platformAvailability } from "@/lib/ai/provider";
 import { getDb } from "@/lib/db";
 import { PLATFORM_IDS } from "@/lib/platforms";
@@ -15,12 +16,14 @@ export default async function SetupPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-12">
-      <p className="text-xs font-medium text-ink-3">Step 1 of 2</p>
-      <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">Which brand are we tracking?</h1>
-      <p className="mt-1 text-sm text-ink-2">Next you add the questions your customers ask, then run the first check.</p>
-      <div className="mt-8 rounded-xl border border-line bg-paper p-6">
-        <BrandForm brand={null} platformOptions={platformOptions} submitLabel="Continue" />
-      </div>
+      <p className="text-xs font-medium text-muted-foreground">Step 1 of 2</p>
+      <h1 className="mt-1 text-2xl font-semibold tracking-tight">Which brand are we tracking?</h1>
+      <p className="mt-1 text-sm text-muted-foreground">Next you add the questions your customers ask, then run the first check.</p>
+      <Card className="mt-8">
+        <CardContent>
+          <BrandForm brand={null} platformOptions={platformOptions} submitLabel="Continue" />
+        </CardContent>
+      </Card>
     </main>
   );
 }

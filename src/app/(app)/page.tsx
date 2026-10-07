@@ -1,8 +1,13 @@
+import { Download } from "lucide-react";
 import Link from "next/link";
 import { startRun } from "@/app/actions/runs";
 import { BarRows } from "@/components/bar-rows";
+import { EmptyState, Muted, Notice, PageHeader, PeriodSelect, Section, Stat, TABLE_INSET, TextLink } from "@/components/blocks";
 import { TrendChart } from "@/components/trend-chart";
-import { Badge, Button, Card, CardHeader, EmptyState, LinkButton, Notice, PageHeader, PeriodSelect, Stat, table } from "@/components/ui";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getDb } from "@/lib/db";
 import { fmtDateTime, fmtDelta, fmtPct, fmtPosition, truncate } from "@/lib/format";
 import { marketLabel } from "@/lib/markets";
@@ -37,9 +42,9 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
                   <Button type="submit">Run now</Button>
                 </form>
               ) : (
-                <LinkButton href="/questions" variant="primary">
-                  Add questions
-                </LinkButton>
+                <Button asChild>
+                  <Link href="/questions">Add questions</Link>
+                </Button>
               )
             }
           />
@@ -47,8 +52,6 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
       </>
     );
   }
-
-  const competitorsTotal = data.competitors.length;
 
   return (
     <>
@@ -58,215 +61,190 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
         actions={
           <>
             <PeriodSelect current={period} basePath="/" />
-            <a href={`/api/export/answers?period=${period}`} className="text-sm text-ink-2 underline-offset-2 hover:text-ink hover:underline">
-              Export CSV
-            </a>
+            <Button asChild variant="outline" size="sm">
+              <a href={`/api/export/answers?period=${period}`}>
+                <Download data-icon="inline-start" />
+                CSV
+              </a>
+            </Button>
           </>
         }
       />
 
-      {data.answers === 0 ? (
-        <Notice className="mb-6">No completed answers in the last {data.days} days. Scores appear after the next check.</Notice>
-      ) : null}
+      {data.answers === 0 ? <Notice className="mb-6">No completed answers in the last {data.days} days. Scores appear after the next check.</Notice> : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label="Visibility score" value={fmtPct(data.score)} delta={fmtDelta(data.scoreDelta)} hint={`${data.answers} answers`} />
         <Stat label="Website cited" value={fmtPct(data.citationRate)} delta={fmtDelta(data.citationDelta)} hint="answers linking your site" />
-        <Stat label="Share of voice" value={fmtPct(data.shareOfVoice)} hint={competitorsTotal > 0 ? `vs ${competitorsTotal} competitors` : "no competitors yet"} />
+        <Stat
+          label="Share of voice"
+          value={fmtPct(data.shareOfVoice)}
+          hint={data.competitors.length > 0 ? `vs ${data.competitors.length} competitors` : "no competitors yet"}
+        />
         <Stat label="Average position" value={fmtPosition(data.avgPosition)} hint="among brands named, when mentioned" />
       </div>
 
-      <Card className="mt-6">
-        <CardHeader title="Visibility score by day" description="Share of answers that mention the brand." />
-        <div className="px-5 py-4">
-          <TrendChart points={data.trend} />
-        </div>
-      </Card>
+      <Section className="mt-6" title="Visibility score by day" description="Share of answers that mention the brand.">
+        <TrendChart points={data.trend} />
+      </Section>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
-        <Card>
-          <CardHeader title="Platforms" description="Visibility score per platform." />
-          <div className="px-5 py-5">
-            {data.platforms.length === 0 ? (
-              <p className="text-sm text-ink-3">No answers yet.</p>
-            ) : (
-              <BarRows
-                rows={data.platforms.map((p) => ({
-                  key: p.platform,
-                  label: platformLabel(p.platform),
-                  value: p.score,
-                  detail: `${p.mentioned}/${p.answers}`,
-                }))}
-                formatValue={(v) => fmtPct(v)}
-              />
-            )}
-          </div>
-        </Card>
+        <Section title="Platforms" description="Visibility score per platform.">
+          {data.platforms.length === 0 ? (
+            <Muted>No answers yet.</Muted>
+          ) : (
+            <BarRows
+              rows={data.platforms.map((p) => ({ key: p.platform, label: platformLabel(p.platform), value: p.score, detail: `${p.mentioned}/${p.answers}` }))}
+              formatValue={(v) => fmtPct(v)}
+            />
+          )}
+        </Section>
 
-        <Card>
-          <CardHeader
-            title="What AI says about you"
-            description="Sentiment of the answers that name the brand."
-            action={
-              <Link href="/answers?mentioned=yes" className="text-sm text-ink-2 underline-offset-2 hover:text-ink hover:underline">
-                See answers
-              </Link>
-            }
-          />
-          <div className="px-5 py-5">
-            {data.selfSentiment.answers === 0 ? (
-              <p className="text-sm text-ink-3">The brand has not been named in this period.</p>
-            ) : (
-              <BarRows
-                rows={[
-                  { key: "positive", label: "Positive", value: pct(data.selfSentiment.positive, data.selfSentiment.answers), detail: String(data.selfSentiment.positive) },
-                  { key: "neutral", label: "Neutral", value: pct(data.selfSentiment.neutral, data.selfSentiment.answers), detail: String(data.selfSentiment.neutral) },
-                  { key: "negative", label: "Negative", value: pct(data.selfSentiment.negative, data.selfSentiment.answers), detail: String(data.selfSentiment.negative) },
-                  { key: "recommended", label: "Recommended", value: pct(data.selfSentiment.recommended, data.selfSentiment.answers), detail: String(data.selfSentiment.recommended) },
-                ]}
-                formatValue={(v) => fmtPct(v)}
-              />
-            )}
-          </div>
-        </Card>
+        <Section
+          title="What AI says about you"
+          description="Sentiment of the answers that name the brand."
+          action={
+            <TextLink href="/answers?mentioned=yes" muted>
+              See answers
+            </TextLink>
+          }
+        >
+          {data.selfSentiment.answers === 0 ? (
+            <Muted>The brand has not been named in this period.</Muted>
+          ) : (
+            <BarRows
+              rows={[
+                { key: "positive", label: "Positive", value: pct(data.selfSentiment.positive, data.selfSentiment.answers), detail: String(data.selfSentiment.positive) },
+                { key: "neutral", label: "Neutral", value: pct(data.selfSentiment.neutral, data.selfSentiment.answers), detail: String(data.selfSentiment.neutral) },
+                { key: "negative", label: "Negative", value: pct(data.selfSentiment.negative, data.selfSentiment.answers), detail: String(data.selfSentiment.negative) },
+                { key: "recommended", label: "Recommended", value: pct(data.selfSentiment.recommended, data.selfSentiment.answers), detail: String(data.selfSentiment.recommended) },
+              ]}
+              formatValue={(v) => fmtPct(v)}
+            />
+          )}
+        </Section>
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
-        <Card>
-          <CardHeader
-            title="Competitors"
-            description="Brands the platforms name instead of, or next to, yours."
-            action={
-              <Link href={`/competitors?period=${period}`} className="text-sm text-ink-2 underline-offset-2 hover:text-ink hover:underline">
-                All competitors
-              </Link>
-            }
-          />
+        <Section
+          title="Competitors"
+          description="Brands the platforms name instead of, or next to, yours."
+          action={
+            <TextLink href={`/competitors?period=${period}`} muted>
+              All competitors
+            </TextLink>
+          }
+          flush
+        >
           {data.competitors.length === 0 ? (
-            <p className="px-5 py-5 text-sm text-ink-3">No competitors extracted yet.</p>
+            <Muted className="px-6">No competitors extracted yet.</Muted>
           ) : (
-            <div className={table.wrap}>
-              <table className={table.table}>
-                <thead>
-                  <tr>
-                    <th className={table.th}>Brand</th>
-                    <th className={table.thRight}>Answers</th>
-                    <th className={table.thRight}>Share</th>
-                    <th className={table.thRight}>Position</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.competitors.map((c) => (
-                    <tr key={c.key} className={table.tr}>
-                      <td className={table.td}>
-                        <Link href={`/competitors/${encodeURIComponent(c.key)}?period=${period}`} className="underline-offset-2 hover:underline">
-                          {c.name}
-                        </Link>
-                        {c.website ? <span className="ml-2 text-xs text-ink-3">{c.website}</span> : null}
-                      </td>
-                      <td className={table.tdRight}>{c.answers}</td>
-                      <td className={table.tdRight}>{fmtPct(c.share)}</td>
-                      <td className={table.tdRight}>{fmtPosition(c.avgPosition)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table className={TABLE_INSET}>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Brand</TableHead>
+                  <TableHead className="text-right">Answers</TableHead>
+                  <TableHead className="text-right">Share</TableHead>
+                  <TableHead className="text-right">Position</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.competitors.map((c) => (
+                  <TableRow key={c.key}>
+                    <TableCell>
+                      <TextLink href={`/competitors/${encodeURIComponent(c.key)}?period=${period}`}>{c.name}</TextLink>
+                      {c.website ? <span className="ml-2 text-xs text-muted-foreground">{c.website}</span> : null}
+                    </TableCell>
+                    <TableCell className="num text-right">{c.answers}</TableCell>
+                    <TableCell className="num text-right">{fmtPct(c.share)}</TableCell>
+                    <TableCell className="num text-right">{fmtPosition(c.avgPosition)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
-        </Card>
+        </Section>
 
-        <Card>
-          <CardHeader title="Cited sources" description="Domains the answers cite most." />
+        <Section title="Cited sources" description="Domains the answers cite most." flush>
           {data.domains.length === 0 ? (
-            <p className="px-5 py-5 text-sm text-ink-3">No citations yet.</p>
+            <Muted className="px-6">No citations yet.</Muted>
           ) : (
-            <div className={table.wrap}>
-              <table className={table.table}>
-                <thead>
-                  <tr>
-                    <th className={table.th}>Domain</th>
-                    <th className={table.thRight}>Answers</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.domains.map((d) => (
-                    <tr key={d.domain} className={table.tr}>
-                      <td className={table.td}>
-                        {d.domain}
-                        {d.isOwn ? (
-                          <Badge variant="solid" className="ml-2">
-                            you
-                          </Badge>
-                        ) : null}
-                      </td>
-                      <td className={table.tdRight}>{d.answers}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table className={TABLE_INSET}>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Domain</TableHead>
+                  <TableHead className="text-right">Answers</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.domains.map((d) => (
+                  <TableRow key={d.domain}>
+                    <TableCell>
+                      {d.domain}
+                      {d.isOwn ? <Badge className="ml-2">you</Badge> : null}
+                    </TableCell>
+                    <TableCell className="num text-right">{d.answers}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
-        </Card>
+        </Section>
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[2fr_1fr]">
-        <Card>
-          <CardHeader
-            title="Questions"
-            description="Visibility score per question."
-            action={
-              <Link href="/questions" className="text-sm text-ink-2 underline-offset-2 hover:text-ink hover:underline">
-                Manage
-              </Link>
-            }
-          />
-          <div className={table.wrap}>
-            <table className={table.table}>
-              <thead>
-                <tr>
-                  <th className={table.th}>Question</th>
-                  <th className={table.thRight}>Score</th>
-                  <th className={table.thRight}>Cited</th>
-                  <th className={table.thRight}>Answers</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.questions.slice(0, 12).map((q) => (
-                  <tr key={q.questionId} className={table.tr}>
-                    <td className={table.td}>
-                      <Link href={`/answers?questionId=${q.questionId}&period=${period}`} className="underline-offset-2 hover:underline">
-                        {truncate(q.text, 90)}
-                      </Link>
-                      {!q.isActive ? (
-                        <Badge variant="muted" className="ml-2">
-                          paused
-                        </Badge>
-                      ) : null}
-                    </td>
-                    <td className={table.tdRight}>{fmtPct(q.score)}</td>
-                    <td className={table.tdRight}>{fmtPct(q.citationRate)}</td>
-                    <td className={table.tdRight}>{q.answers}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+        <Section
+          title="Questions"
+          description="Visibility score per question."
+          action={
+            <TextLink href="/questions" muted>
+              Manage
+            </TextLink>
+          }
+          flush
+        >
+          <Table className={TABLE_INSET}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Question</TableHead>
+                <TableHead className="text-right">Score</TableHead>
+                <TableHead className="text-right">Cited</TableHead>
+                <TableHead className="text-right">Answers</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.questions.slice(0, 12).map((q) => (
+                <TableRow key={q.questionId}>
+                  <TableCell className="whitespace-normal">
+                    <TextLink href={`/answers?questionId=${q.questionId}&period=${period}`}>{truncate(q.text, 90)}</TextLink>
+                    {!q.isActive ? (
+                      <Badge variant="secondary" className="ml-2">
+                        paused
+                      </Badge>
+                    ) : null}
+                  </TableCell>
+                  <TableCell className="num text-right">{fmtPct(q.score)}</TableCell>
+                  <TableCell className="num text-right">{fmtPct(q.citationRate)}</TableCell>
+                  <TableCell className="num text-right">{q.answers}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Section>
 
-        <Card>
-          <CardHeader title="Latest checks" />
-          <ul className="divide-y divide-line">
+        <Section title="Latest checks" flush>
+          <ul className="divide-y">
             {data.runs.map((run) => (
-              <li key={run.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
+              <li key={run.id} className="flex items-center justify-between gap-3 px-6 py-3 text-sm">
                 <div>
-                  <Link href={`/runs/${run.id}`} className="font-medium text-ink underline-offset-2 hover:underline">
+                  <TextLink href={`/runs/${run.id}`} className="font-medium">
                     {run.trigger === "scheduled" ? "Scheduled" : "Manual"} check
-                  </Link>
-                  <p className="text-xs text-ink-3">{fmtDateTime(run.createdAt)}</p>
+                  </TextLink>
+                  <p className="text-xs text-muted-foreground">{fmtDateTime(run.createdAt)}</p>
                 </div>
                 <div className="text-right">
-                  <Badge variant={run.status === "completed" ? "outline" : "muted"}>{run.status}</Badge>
-                  <p className="num mt-1 text-xs text-ink-3">
+                  <Badge variant={run.status === "completed" ? "outline" : "secondary"}>{run.status}</Badge>
+                  <p className="num mt-1 text-xs text-muted-foreground">
                     {run.doneItems}/{run.totalItems}
                     {run.failedItems > 0 ? ` · ${run.failedItems} failed` : ""}
                   </p>
@@ -274,7 +252,7 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
               </li>
             ))}
           </ul>
-        </Card>
+        </Section>
       </div>
     </>
   );
