@@ -1,0 +1,44 @@
+"use client";
+
+import { useActionState } from "react";
+import { addQuestions, type QuestionFormState } from "@/app/actions/questions";
+import { Button, Field, Select, Textarea } from "./ui";
+
+const initialState: QuestionFormState = { error: null, added: 0 };
+
+export function QuestionForm({ autoFocus = false }: { autoFocus?: boolean }) {
+  const [state, action, pending] = useActionState(addQuestions, initialState);
+  return (
+    <form action={action} className="space-y-4">
+      <Field label="Questions your customers ask AI" htmlFor="questions" hint="One per line. Write them the way a real person would type them into ChatGPT.">
+        <Textarea
+          id="questions"
+          name="questions"
+          required
+          autoFocus={autoFocus}
+          placeholder={"best project management tools for small teams\nwhich CRM integrates with Slack?"}
+          className="min-h-36"
+        />
+      </Field>
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="w-44">
+          <Field label="Check" htmlFor="cadence">
+            <Select id="cadence" name="cadence" defaultValue="daily">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+            </Select>
+          </Field>
+        </div>
+        <Button type="submit" disabled={pending}>
+          {pending ? "Adding…" : "Add questions"}
+        </Button>
+        {state.error ? <p className="text-sm text-ink">{state.error}</p> : null}
+        {state.added > 0 && !state.error ? (
+          <p className="text-sm text-ink-2">
+            Added {state.added} question{state.added === 1 ? "" : "s"}.
+          </p>
+        ) : null}
+      </div>
+    </form>
+  );
+}

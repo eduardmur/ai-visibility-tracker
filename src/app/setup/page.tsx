@@ -1,0 +1,26 @@
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { BrandForm } from "@/components/brand-form";
+import { platformAvailability } from "@/lib/ai/provider";
+import { getDb } from "@/lib/db";
+import { PLATFORM_IDS } from "@/lib/platforms";
+import { getBrand } from "@/lib/queries/brand";
+
+export const metadata: Metadata = { title: "Set up" };
+
+export default async function SetupPage() {
+  const db = await getDb();
+  if (await getBrand(db)) redirect("/settings");
+  const platformOptions = PLATFORM_IDS.map((id) => platformAvailability(id));
+
+  return (
+    <main className="mx-auto max-w-2xl px-4 py-12">
+      <p className="text-xs font-medium text-ink-3">Step 1 of 2</p>
+      <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">Which brand are we tracking?</h1>
+      <p className="mt-1 text-sm text-ink-2">Next you add the questions your customers ask, then run the first check.</p>
+      <div className="mt-8 rounded-xl border border-line bg-paper p-6">
+        <BrandForm brand={null} platformOptions={platformOptions} submitLabel="Continue" />
+      </div>
+    </main>
+  );
+}

@@ -1,36 +1,144 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Visibility Tracker
 
-## Getting Started
+Track how **ChatGPT, Perplexity, Gemini, Claude and Grok** answer the questions your customers ask: whether they mention your brand, cite your website, which competitors they recommend instead, and what they say about each one.
 
-First, run the development server:
+Self-hosted, open source, and deliberately small. One Vercel AI Gateway key covers every platform, each platform answers with its **own native web search**, and the whole thing deploys to Vercel with one click.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fsearcherries%2Fai-visibility-tracker&project-name=ai-visibility-tracker&repository-name=ai-visibility-tracker&env=ADMIN_PASSWORD,CRON_SECRET&envDescription=ADMIN_PASSWORD%20protects%20the%20dashboard.%20CRON_SECRET%20protects%20the%20daily%20check%20%28any%20long%20random%20string%29.&envLink=https%3A%2F%2Fgithub.com%2Fsearcherries%2Fai-visibility-tracker%23configuration&products=%5B%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22neon%22%2C%22integrationSlug%22%3A%22neon%22%7D%5D)
+
+## What you get
+
+- **Visibility score** per period, platform and question: the share of answers that mention your brand.
+- **Citations**: which answers link to your site, and which domains the platforms cite instead.
+- **Competitors**: every brand the answers name as an alternative, with share of voice, average position, sentiment and the exact statements made about it.
+- **Answers**: the full text of every answer, its sources and the searches the platform ran, exportable as CSV.
+- **Checks on a schedule**: daily questions run every day, weekly ones once a week, plus a *Run now* button.
+
+Everything about *your* brand is decided by plain text matching over the stored answer, never by a model, so each number can be reproduced from the data in your own database. A small model call only extracts the *other* brands an answer names and what it says about them.
+
+## Deploy to Vercel in five minutes
+
+1. Click **Deploy with Vercel** above. It clones this repository, provisions a free Neon Postgres database, and asks for two values:
+   - `ADMIN_PASSWORD`: the password for the dashboard.
+   - `CRON_SECRET`: any long random string (`openssl rand -hex 32`). Vercel Cron uses it for the daily check.
+2. Open the deployment, sign in, enter your brand, website and market, and pick the platforms.
+3. Add a few questions your customers would ask an AI assistant and press **Run now**. Answers appear within a minute.
+
+No AI key is needed on Vercel: the app authenticates to the [AI Gateway](https://vercel.com/ai-gateway) with the deployment's own identity (OIDC). Every Vercel account has a free gateway tier; beyond it you pay the providers' list prices with no markup.
+
+> The Hobby plan runs cron jobs once a day with a one-hour window and stops functions after 300 seconds. The tracker is built for exactly that: the daily check is split into batches that re-invoke themselves until every answer is in.
+
+## Run it locally
 
 ```bash
+git clone https://github.com/searcherries/ai-visibility-tracker
+cd ai-visibility-tracker
+npm install
+cp .env.example .env.local   # set ADMIN_PASSWORD and AI_GATEWAY_API_KEY
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. Without `DATABASE_URL` the app uses an embedded Postgres ([PGlite](https://pglite.dev)) stored in `./data/pglite`, so there is nothing else to install. Point `DATABASE_URL` at any Postgres to use that instead.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Useful scripts:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | What it does |
+|---|---|
+| `npm run dev` | Development server |
+| `npm run build` | Applies migrations, then builds (Vercel runs this) |
+| `npm test` | Unit and integration tests (no network) |
+| `npm run smoke -- "your question" "Brand" "brand.com"` | Live check of every available platform plus the extractor. Spends a few cents. |
+| `npm run seed:demo` | Fills an empty database with a demo brand and two weeks of synthetic answers |
+| `npm run db:generate` | Generates a migration after changing `src/lib/db/schema.ts` |
 
-## Learn More
+## How it works
 
-To learn more about Next.js, take a look at the following resources:
+**Collection.** For each question and platform, the app sends the question with a short answer contract ("answer in under 350 words, name the relevant brands, cite sources") and the platform's native search tool:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Platform | Default model | Search |
+|---|---|---|
+| ChatGPT | `openai/gpt-5.4-nano` | OpenAI `web_search` tool |
+| Perplexity | `perplexity/sonar` | built into the model |
+| Gemini | `google/gemini-3-flash` | Google Search grounding |
+| Claude | `anthropic/claude-haiku-4.5` | Anthropic web search, one search per answer |
+| Grok | `xai/grok-4.20-non-reasoning` | xAI web search, budgeted to one search |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Model ids are gateway ids (`creator/model`) and can be overridden per platform (`MODEL_CHATGPT`, `MODEL_CLAUDE`, …). The answer text, the sources the platform returned and the searches it ran are stored verbatim.
 
-## Deploy on Vercel
+These are the vendors' API models with web search, which is what makes one key and one code path possible. They are close to, but not identical with, the consumer apps.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Analysis.** For every stored answer:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. *Brand mentioned*: word-boundary match of the brand name and its aliases in the answer text.
+2. *Website cited*: a source or a link in the text points at your domain (subdomains included).
+3. *Brands named*: one structured-output call (`openai/gpt-4o-mini` by default, `MODEL_EXTRACTOR`) lists every brand in the answer with sentiment, whether it is recommended, whether it competes with you, and up to three statements made about it. Spellings are merged (`Otterly.ai` = `OtterlyAI`), generic words are dropped, and a website is only attributed to a brand when the domain matches its name.
+4. *Position*: the order in which the brands first appear in the text, computed from the text, not from the model.
+
+**Scores** (all over the completed answers of the selected period):
+
+- Visibility score = answers mentioning the brand ÷ answers.
+- Website cited = answers citing the domain ÷ answers.
+- Share of voice = answers mentioning the brand ÷ (that + answers naming each competitor).
+- Average position = mean rank among the brands named, over answers that mention the brand.
+
+## Costs
+
+The app itself is free. You pay the model providers through the gateway at list price. Measured per answer with the default models and `low` search context:
+
+| Platform | Per answer |
+|---|---|
+| ChatGPT | ≈ $0.012 |
+| Perplexity | ≈ $0.006 |
+| Gemini | ≈ $0.009 |
+| Claude | ≈ $0.03 |
+| Grok | ≈ $0.035 |
+| Brand extraction | ≈ $0.001 |
+
+Ten questions on the default three platforms cost about **$0.27 per daily check**, around $8 a month. Weekly questions cost a seventh of that. The default selection is three platforms for that reason; add Claude and Grok when the budget allows.
+
+## Configuration
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `ADMIN_PASSWORD` | yes | Dashboard password. Changing it signs everyone out. |
+| `CRON_SECRET` | on Vercel | Protects `/api/cron/daily` and the background processor. Vercel Cron sends it automatically. Locally an ephemeral secret is generated. |
+| `DATABASE_URL` | on Vercel | Postgres connection string (the Deploy button provisions Neon). Empty locally = embedded PGlite. |
+| `AI_GATEWAY_API_KEY` | locally | One key for every platform. Empty on Vercel = OIDC. |
+| `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`, `XAI_API_KEY`, `PERPLEXITY_API_KEY` | no | Direct vendor access, used only when no gateway key is set and the app is not on Vercel. A platform is available when its vendor key exists. |
+| `MODEL_CHATGPT`, `MODEL_PERPLEXITY`, `MODEL_GEMINI`, `MODEL_CLAUDE`, `MODEL_GROK`, `MODEL_EXTRACTOR` | no | Model overrides. |
+| `APP_URL` | no | Public URL, used when the processor re-invokes itself. Defaults to the request origin. |
+| `RUN_BATCH_BUDGET_MS` | no | Wall-clock budget of one processing invocation (default 140 000). Raise it on Vercel Pro together with `maxDuration`. |
+
+Bring your own keys and skip the gateway if you prefer: set the vendor keys instead of `AI_GATEWAY_API_KEY`. The same prompts, tools and parsing apply; only the transport changes.
+
+## How runs work
+
+A *check* (run) is one row per question × platform. `POST /api/internal/runs/{id}/process` answers `202` immediately and then works through pending rows four at a time, stopping after `RUN_BATCH_BUDGET_MS` to stay inside the function limit, and calls itself again while rows remain. Claims are atomic, so overlapping invocations never process the same row twice, and a row left "running" by a killed function is retried once after ten minutes.
+
+The daily cron (`vercel.json`, 06:00 UTC) creates a run with every question that is due and starts the same processor. If a run stalls, the run page offers **Resume**.
+
+## Hosted alternative
+
+Don't want to run it yourself? [Searcherries](https://searcherries.com?utm_source=github&utm_medium=readme&utm_campaign=ai-visibility-tracker) is the hosted version from the same team, from $13/month, model costs included. It adds Google AI Overviews, Search Console, Google Analytics and Bing data per project, calibrated answer insights, and an MCP server so Claude, Codex, Cursor and Claude Code can work on your visibility with your own numbers.
+
+## Development
+
+```bash
+npm test            # vitest, uses an in-memory PGlite database
+npm run typecheck
+npm run lint
+```
+
+The code is organised so the moving parts stay separate:
+
+- `src/lib/ai/` talks to the models (provider selection, per-platform tools, prompts, source normalisation, extraction).
+- `src/lib/analysis/` is pure: mention detection, brand identity, scoring.
+- `src/lib/runs/` creates and processes checks.
+- `src/lib/queries/` reads the database for the pages.
+- `src/app/` is the Next.js App Router UI, with server actions in `src/app/actions/` and route handlers in `src/app/api/`.
+
+Contributions are welcome. Keep the project small: one key, one code path per platform, numbers reproducible from the stored answers.
+
+## License
+
+Apache License 2.0. "Searcherries" is a trademark; see `TRADEMARK.md`.
