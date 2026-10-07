@@ -26,7 +26,7 @@ Everything about *your* brand is decided by plain text matching over the stored 
 2. Open the deployment, sign in, enter your brand, website and market, and pick the platforms.
 3. Add a few questions your customers would ask an AI assistant and press **Run now**. Answers appear within a minute.
 
-No AI key is needed on Vercel: the app authenticates to the [AI Gateway](https://vercel.com/ai-gateway) with the deployment's own identity (OIDC). **The gateway does need a positive balance**: open your Vercel team → AI Gateway → Credits and add funds before the first check, otherwise every platform request fails. You pay the providers' list prices with no markup; a few dollars cover weeks of daily checks (see [Costs](#costs)).
+No AI key is needed on Vercel: the app authenticates to the [AI Gateway](https://vercel.com/ai-gateway) with the deployment's own identity (OIDC). **The gateway does need a positive balance**: open your Vercel team → AI Gateway → Credits and add funds before the first check, otherwise every platform request fails. You pay the providers' list prices with no markup; see [Costs](#costs).
 
 > The Hobby plan runs cron jobs once a day with a one-hour window and stops functions after 300 seconds. The tracker is built for exactly that: the daily check is split into batches that re-invoke themselves until every answer is in.
 
@@ -85,18 +85,9 @@ These are the vendors' API models with web search, which is what makes one key a
 
 ## Costs
 
-The app itself is free. You pay the model providers through the gateway at list price. Measured per answer with the default models and `low` search context:
+The app itself is free. You pay the model providers through the gateway at list price, and the bill depends entirely on the models you pick in Settings: web search is what costs, so a model with a cheap search tool and a small answer stays in the cents per check, while Claude and Grok cost several times more per answer than the default trio. Each check is one call per question per platform plus one small extraction call per answer, so ten questions on three platforms every day means about a thousand calls a month.
 
-| Platform | Per answer |
-|---|---|
-| ChatGPT | ≈ $0.012 |
-| Perplexity | ≈ $0.006 |
-| Gemini | ≈ $0.009 |
-| Claude | ≈ $0.03 |
-| Grok | ≈ $0.035 |
-| Brand extraction | ≈ $0.001 |
-
-Ten questions on the default three platforms cost about **$0.27 per daily check**, around $8 a month. Weekly questions cost a seventh of that. The default selection is three platforms for that reason; add Claude and Grok when the budget allows.
+Current per-token prices are on the [AI Gateway model list](https://vercel.com/ai-gateway/models), and the gateway dashboard shows what each check actually cost. The default selection is three platforms for that reason; add Claude and Grok when the budget allows, and switch questions to weekly to cut the bill further.
 
 ## Configuration
 
