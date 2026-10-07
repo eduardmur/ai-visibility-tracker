@@ -59,6 +59,18 @@ describe("normalizeExtractedBrands", () => {
     expect(rows.find((r) => r.key === "seranking")!.website).toBeNull();
   });
 
+  it("treats a recommended brand as a competitor even when the extractor said otherwise", () => {
+    const rows = normalizeExtractedBrands(
+      [
+        { name: "Netlify", matched_names: ["Netlify"], website: "netlify.com", sentiment: "positive", recommended: true, is_competitor: false, highlights: [] },
+        { name: "GitHub", matched_names: ["GitHub"], website: "github.com", sentiment: "neutral", recommended: false, is_competitor: false, highlights: [] },
+      ],
+      input,
+    );
+    expect(rows.find((r) => r.key === "netlify")!.isCompetitor).toBe(true);
+    expect(rows.find((r) => r.key === "github")!.isCompetitor).toBe(false);
+  });
+
   it("flags the tracked brand and never marks it as a competitor", () => {
     const rows = normalizeExtractedBrands(
       [{ name: "Searcherries AI", matched_names: ["Searcherries"], website: "searcherries.com", sentiment: "positive", recommended: true, is_competitor: true, highlights: [] }],

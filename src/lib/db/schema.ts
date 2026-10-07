@@ -172,3 +172,17 @@ export type Question = typeof questions.$inferSelect;
 export type Run = typeof runs.$inferSelect;
 export type Answer = typeof answers.$inferSelect;
 export type BrandMention = typeof brandMentions.$inferSelect;
+
+/** App-wide settings. One row; model overrides keyed by platform id plus "extractor". */
+export const settings = pgTable("settings", {
+  id: serial("id").primaryKey(),
+  models: jsonb("models")
+    .$type<Record<string, string>>()
+    .notNull()
+    .default(sql`'{}'::jsonb`),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+    .notNull()
+    .defaultNow(),
+});
+
+export type Settings = typeof settings.$inferSelect;

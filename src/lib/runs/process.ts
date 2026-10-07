@@ -5,7 +5,8 @@ import { extractBrands, type ExtractInput, type ExtractedBrand } from "@/lib/ai/
 import { extractorAvailability } from "@/lib/ai/provider";
 import { queryPlatform, type QueryInput, type QueryResult } from "@/lib/ai/query";
 import { detectCitation, findMentions, rankBrands } from "@/lib/analysis/mentions";
-import { isPlatformId } from "@/lib/platforms";
+import { isPlatformId, type ModelConfig } from "@/lib/platforms";
+import { getModelConfig } from "@/lib/queries/settings";
 
 export interface ProcessDeps {
   query: (input: QueryInput) => Promise<QueryResult>;
@@ -35,10 +36,10 @@ const SELF_KEY = "__self__";
 const STALE_RUNNING_MS = 10 * 60_000;
 const MAX_ATTEMPTS = 2;
 
-function defaultDeps(): ProcessDeps {
+function defaultDeps(models: ModelConfig): ProcessDeps {
   return {
     query: queryPlatform,
-    extract: extractorAvailability().available ? extractBrands : null,
+    extract: extractorAvailability(models.extractor).available ? extractBrands : null,
     now: () => new Date(),
     log: (message, meta) => console.log(`[run] ${message}`, meta ?? ""),
   };
@@ -51,7 +52,8 @@ function defaultDeps(): ProcessDeps {
  * killed invocation are retried once.
  */
 export async function processRun(db: Database, runId: number, options: ProcessOptions = {}): Promise<ProcessOutcome> {
-  const deps: ProcessDeps = { ...defaultDeps(), ...options.deps };
+  const models = await getModelConfig(db);
+  const deps: ProcessDeps = { ...defaultDeps(models), ...options.deps };
   const budgetMs = options.budgetMs ?? 140_000;
   const concurrency = Math.max(1, options.concurrency ?? 4);
   const startedAt = Date.now();
@@ -80,7 +82,7 @@ export async function processRun(db: Database, runId: number, options: ProcessOp
       claimed.map(async (answer) => {
         const question = await loadQuestion(db, questionCache, answer.questionId);
         try {
-          await processAnswer(db, answer, brand, question, deps);
+          await processAnswer(db, answer, brand, question, deps, models);
         } catch (error) {
           deps.log("answer failed unexpectedly", { answerId: answer.id, error: String(error) });
           await markFailed(db, answer.id, answer.modelId, `Unexpected error: ${String(error).slice(0, 500)}`, deps.now());
@@ -129,7 +131,14 @@ async function claimAnswers(db: Database, runId: number, limit: number, now: Dat
     .returning();
 }
 
-async function processAnswer(db: Database, answer: Answer, brand: Brand, question: Question, deps: ProcessDeps): Promise<void> {
+async function processAnswer(
+  db: Database,
+  answer: Answer,
+  brand: Brand,
+  question: Question,
+  deps: ProcessDeps,
+  models: ModelConfig,
+): Promise<void> {
   if (!isPlatformId(answer.platform)) {
     await markFailed(db, answer.id, null, `Unknown platform "${answer.platform}"`, deps.now());
     return;
@@ -140,6 +149,7 @@ async function processAnswer(db: Database, answer: Answer, brand: Brand, questio
     question: question.text,
     country: brand.country,
     language: brand.language,
+    modelId: models.platforms[answer.platform],
   });
 
   if (!result.ok) {
@@ -161,6 +171,7 @@ async function processAnswer(db: Database, answer: Answer, brand: Brand, questio
         brandName: brand.name,
         brandAliases: brand.aliases,
         brandDomain: brand.domain,
+        modelId: models.extractor,
       });
     } catch (error) {
       deps.log("brand extraction failed; storing the answer without competitors", {

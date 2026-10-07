@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Muted, PageHeader, Section, TextLink } from "@/components/blocks";
+import { Markdown } from "@/components/markdown";
 import { Badge } from "@/components/ui/badge";
 import { getDb } from "@/lib/db";
 import { fmtDateTime, fmtPosition } from "@/lib/format";
@@ -58,7 +59,7 @@ export default async function AnswerPage({ params }: { params: Promise<{ id: str
       <div className="grid gap-6 xl:grid-cols-[3fr_2fr]">
         <div className="space-y-6">
           <Section title="Answer">
-            <div className="answer-text text-sm leading-6">{answer.text ?? "—"}</div>
+            {answer.text ? <Markdown>{answer.text}</Markdown> : <Muted>—</Muted>}
           </Section>
           {answer.searchQueries.length > 0 ? (
             <Section title="Searches the platform ran">

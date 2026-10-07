@@ -16,6 +16,8 @@ export interface QueryInput {
   question: string;
   country: string | null;
   language: string | null;
+  /** Overrides the platform's configured model (Settings → Models). */
+  modelId?: string;
   timeoutMs?: number;
 }
 
@@ -42,7 +44,7 @@ export const DEFAULT_QUERY_TIMEOUT_MS = 100_000;
 
 /** Asks one AI platform the question the way a user would, with its native web search. */
 export async function queryPlatform(input: QueryInput): Promise<QueryResult> {
-  const modelId = platformModelId(input.platform);
+  const modelId = input.modelId ?? platformModelId(input.platform);
   const started = Date.now();
   try {
     const model = languageModel(modelId);

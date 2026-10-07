@@ -65,7 +65,7 @@ Useful scripts:
 | Claude | `anthropic/claude-haiku-4.5` | Anthropic web search, one search per answer |
 | Grok | `xai/grok-4.20-non-reasoning` | xAI web search, budgeted to one search |
 
-Model ids are gateway ids (`creator/model`) and can be overridden per platform (`MODEL_CHATGPT`, `MODEL_CLAUDE`, …). The answer text, the sources the platform returned and the searches it ran are stored verbatim.
+Model ids are gateway ids (`creator/model`). Change them on the Settings page (stored in the database) or with environment variables (`MODEL_CHATGPT`, `MODEL_CLAUDE`, …); the Settings page wins, then the environment, then these defaults. The answer text, the sources the platform returned and the searches it ran are stored verbatim.
 
 These are the vendors' API models with web search, which is what makes one key and one code path possible. They are close to, but not identical with, the consumer apps.
 
@@ -73,7 +73,7 @@ These are the vendors' API models with web search, which is what makes one key a
 
 1. *Brand mentioned*: word-boundary match of the brand name and its aliases in the answer text.
 2. *Website cited*: a source or a link in the text points at your domain (subdomains included).
-3. *Brands named*: one structured-output call (`openai/gpt-4o-mini` by default, `MODEL_EXTRACTOR`) lists every brand in the answer with sentiment, whether it is recommended, whether it competes with you, and up to three statements made about it. Spellings are merged (`Otterly.ai` = `OtterlyAI`), generic words are dropped, and a website is only attributed to a brand when the domain matches its name.
+3. *Brands named*: one structured-output call (`openai/gpt-4o-mini` by default, changeable in Settings) lists every brand in the answer with sentiment, whether it is recommended, whether it competes with you, and up to three statements made about it. Any brand the answer recommends for the question counts as a competitor regardless of the model's own verdict. Spellings are merged (`Otterly.ai` = `OtterlyAI`), generic words are dropped, and a website is only attributed to a brand when the domain matches its name.
 4. *Position*: the order in which the brands first appear in the text, computed from the text, not from the model.
 
 **Scores** (all over the completed answers of the selected period):
@@ -107,7 +107,7 @@ Ten questions on the default three platforms cost about **$0.27 per daily check*
 | `DATABASE_URL` | on Vercel | Postgres connection string (the Deploy button provisions Neon). Empty locally = embedded PGlite. |
 | `AI_GATEWAY_API_KEY` | locally | One key for every platform. Empty on Vercel = OIDC. Either way the Vercel team's AI Gateway balance must be positive. |
 | `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`, `XAI_API_KEY`, `PERPLEXITY_API_KEY` | no | Direct vendor access, used only when no gateway key is set and the app is not on Vercel. A platform is available when its vendor key exists. |
-| `MODEL_CHATGPT`, `MODEL_PERPLEXITY`, `MODEL_GEMINI`, `MODEL_CLAUDE`, `MODEL_GROK`, `MODEL_EXTRACTOR` | no | Model overrides. |
+| `MODEL_CHATGPT`, `MODEL_PERPLEXITY`, `MODEL_GEMINI`, `MODEL_CLAUDE`, `MODEL_GROK`, `MODEL_EXTRACTOR` | no | Model defaults for a deployment. Values saved on the Settings page take precedence. |
 | `APP_URL` | no | Public URL, used when the processor re-invokes itself. Defaults to the request origin. |
 | `RUN_BATCH_BUDGET_MS` | no | Wall-clock budget of one processing invocation (default 140 000). Raise it on Vercel Pro together with `maxDuration`. |
 

@@ -1,24 +1,47 @@
 import type { Metadata } from "next";
 import { logout } from "@/app/actions/auth";
-import { Muted, PageHeader, Section, TABLE_INSET } from "@/components/blocks";
+import { Muted, PageHeader, Section } from "@/components/blocks";
 import { BrandForm } from "@/components/brand-form";
-import { Badge } from "@/components/ui/badge";
+import { ModelsForm, type ModelRow } from "@/components/models-form";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { extractorAvailability, platformAvailability, transport } from "@/lib/ai/provider";
 import { databaseUrl, getDb } from "@/lib/db";
-import { PLATFORMS, PLATFORM_IDS } from "@/lib/platforms";
+import { EXTRACTOR_KEY, PLATFORMS, PLATFORM_IDS, resolveModelConfig } from "@/lib/platforms";
 import { getBrand } from "@/lib/queries/brand";
+import { getModelOverrides } from "@/lib/queries/settings";
 
 export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const db = await getDb();
   const brand = (await getBrand(db))!;
-  const platformOptions = PLATFORM_IDS.map((id) => platformAvailability(id));
-  const extractor = extractorAvailability();
+  const overrides = await getModelOverrides(db);
+  const models = resolveModelConfig(overrides);
+  const platformOptions = PLATFORM_IDS.map((id) => platformAvailability(id, models.platforms[id]));
+  const extractor = extractorAvailability(models.extractor);
   const mode = transport();
   const cronConfigured = Boolean(process.env.CRON_SECRET);
+
+  const modelRows: ModelRow[] = [
+    ...platformOptions.map((option) => ({
+      key: option.id,
+      label: PLATFORMS[option.id].label,
+      description: PLATFORMS[option.id].description,
+      stored: overrides[option.id] ?? null,
+      effective: option.modelId,
+      available: option.available,
+      reason: option.reason,
+    })),
+    {
+      key: EXTRACTOR_KEY,
+      label: "Brand extraction",
+      description: "Names the brands in each answer and what was said about them.",
+      stored: overrides[EXTRACTOR_KEY] ?? null,
+      effective: extractor.modelId,
+      available: extractor.available,
+      reason: extractor.reason,
+    },
+  ];
 
   return (
     <>
@@ -30,53 +53,14 @@ export default async function SettingsPage() {
 
       <Section
         className="mt-6"
-        title="AI access"
+        title="Models"
         description={
           mode === "gateway"
             ? "Requests go through the Vercel AI Gateway with one key (or the deployment's own identity on Vercel). The team's AI Gateway balance must be positive."
             : "Requests go directly to each vendor with its own API key. Set AI_GATEWAY_API_KEY to use one key for everything."
         }
-        flush
       >
-        <Table className={TABLE_INSET}>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Platform</TableHead>
-              <TableHead>Model</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {platformOptions.map((option) => (
-              <TableRow key={option.id}>
-                <TableCell className="whitespace-normal">
-                  {PLATFORMS[option.id].label}
-                  <p className="text-xs text-muted-foreground">{PLATFORMS[option.id].description}</p>
-                </TableCell>
-                <TableCell className="whitespace-normal">
-                  <code className="font-mono text-xs">{option.modelId}</code>
-                  <p className="text-xs text-muted-foreground">override with {PLATFORMS[option.id].modelEnv}</p>
-                </TableCell>
-                <TableCell className="whitespace-normal">
-                  {option.available ? <Badge variant="outline">Ready</Badge> : <Badge variant="secondary">{option.reason}</Badge>}
-                </TableCell>
-              </TableRow>
-            ))}
-            <TableRow>
-              <TableCell className="whitespace-normal">
-                Brand extraction
-                <p className="text-xs text-muted-foreground">Names the brands in each answer and what was said about them.</p>
-              </TableCell>
-              <TableCell className="whitespace-normal">
-                <code className="font-mono text-xs">{extractor.modelId}</code>
-                <p className="text-xs text-muted-foreground">override with MODEL_EXTRACTOR</p>
-              </TableCell>
-              <TableCell className="whitespace-normal">
-                {extractor.available ? <Badge variant="outline">Ready</Badge> : <Badge variant="secondary">{extractor.reason}</Badge>}
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
+        <ModelsForm rows={modelRows} />
       </Section>
 
       <Section className="mt-6" title="Schedule" description="A daily check runs at 06:00 UTC through Vercel Cron (vercel.json). Weekly questions are included once every seven days.">

@@ -4,7 +4,7 @@ import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { perplexity } from "@ai-sdk/perplexity";
 import { xai } from "@ai-sdk/xai";
-import { PLATFORM_IDS, extractorModelId, platformModelId, type PlatformId } from "@/lib/platforms";
+import { PLATFORM_IDS, extractorModelId, platformModelId, type ModelConfig, type PlatformId } from "@/lib/platforms";
 
 export type Transport = "gateway" | "direct";
 export type Vendor = "openai" | "anthropic" | "google" | "xai" | "perplexity";
@@ -62,16 +62,16 @@ export function modelAvailability(modelId: string): ModelAvailability {
 
 export type PlatformAvailability = ModelAvailability & { id: PlatformId };
 
-export function platformAvailability(id: PlatformId): PlatformAvailability {
-  return { id, ...modelAvailability(platformModelId(id)) };
+export function platformAvailability(id: PlatformId, modelId: string = platformModelId(id)): PlatformAvailability {
+  return { id, ...modelAvailability(modelId) };
 }
 
-export function availablePlatforms(): PlatformId[] {
-  return PLATFORM_IDS.filter((id) => platformAvailability(id).available);
+export function availablePlatforms(config?: ModelConfig): PlatformId[] {
+  return PLATFORM_IDS.filter((id) => platformAvailability(id, config?.platforms[id]).available);
 }
 
-export function extractorAvailability(): ModelAvailability {
-  return modelAvailability(extractorModelId());
+export function extractorAvailability(modelId: string = extractorModelId()): ModelAvailability {
+  return modelAvailability(modelId);
 }
 
 export function languageModel(modelId: string): LanguageModel {

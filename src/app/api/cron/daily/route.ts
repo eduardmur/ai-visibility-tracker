@@ -5,6 +5,7 @@ import { isInternalRequest, runBatchBudgetMs } from "@/lib/env";
 import { normalizePlatformList } from "@/lib/platforms";
 import { getBrand } from "@/lib/queries/brand";
 import { activeRun } from "@/lib/queries/runs";
+import { getModelConfig } from "@/lib/queries/settings";
 import { createRun } from "@/lib/runs/create";
 import { processRun } from "@/lib/runs/process";
 import { isQuestionDue } from "@/lib/runs/schedule";
@@ -35,7 +36,7 @@ export async function GET(request: Request): Promise<Response> {
   const due = (await db.select().from(questions).where(eq(questions.brandId, brand.id))).filter((q) => isQuestionDue(q, now));
   if (due.length === 0) return Response.json({ skipped: "no questions due" });
 
-  const available = new Set(availablePlatforms());
+  const available = new Set(availablePlatforms(await getModelConfig(db)));
   const platforms = normalizePlatformList(brand.platforms).filter((p) => available.has(p));
   const { runId, totalItems } = await createRun(db, {
     brandId: brand.id,

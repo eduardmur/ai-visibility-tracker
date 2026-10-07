@@ -56,6 +56,7 @@ export function isPlatformId(value: unknown): value is PlatformId {
   return typeof value === "string" && (PLATFORM_IDS as readonly string[]).includes(value);
 }
 
+/** Model behind a platform from the environment or the built-in default (no database involved). */
 export function platformModelId(id: PlatformId): string {
   const override = process.env[PLATFORMS[id].modelEnv]?.trim();
   return override || PLATFORMS[id].defaultModel;
@@ -63,6 +64,31 @@ export function platformModelId(id: PlatformId): string {
 
 export function extractorModelId(): string {
   return process.env.MODEL_EXTRACTOR?.trim() || EXTRACTOR_DEFAULT_MODEL;
+}
+
+export const EXTRACTOR_KEY = "extractor";
+
+export interface ModelConfig {
+  platforms: Record<PlatformId, string>;
+  extractor: string;
+}
+
+/** Looks like a gateway model id: `creator/model`, no spaces. */
+export function isModelId(value: string): boolean {
+  return /^[a-z0-9][a-z0-9._-]*\/[A-Za-z0-9][A-Za-z0-9._:-]*$/i.test(value.trim());
+}
+
+/**
+ * Effective model per platform: stored overrides first (the Settings page),
+ * then environment variables, then the built-in defaults.
+ */
+export function resolveModelConfig(overrides: Record<string, string> = {}): ModelConfig {
+  const pick = (key: string, fallback: string) => {
+    const value = overrides[key]?.trim();
+    return value && isModelId(value) ? value : fallback;
+  };
+  const platforms = Object.fromEntries(PLATFORM_IDS.map((id) => [id, pick(id, platformModelId(id))])) as Record<PlatformId, string>;
+  return { platforms, extractor: pick(EXTRACTOR_KEY, extractorModelId()) };
 }
 
 export function platformLabel(id: string): string {

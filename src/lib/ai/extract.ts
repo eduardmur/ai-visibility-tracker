@@ -12,13 +12,17 @@ const sentimentSchema = z.enum(["positive", "neutral", "negative"]);
 export const extractionSchema = z.object({
   brands: z.array(
     z.object({
-      name: z.string(),
-      matched_names: z.array(z.string()),
-      website: z.string().nullable(),
-      sentiment: sentimentSchema,
-      recommended: z.boolean(),
-      is_competitor: z.boolean(),
-      highlights: z.array(z.string()),
+      name: z.string().describe("Canonical brand or product name."),
+      matched_names: z.array(z.string()).describe("Exact spellings of the brand copied from the answer text."),
+      website: z.string().nullable().describe("Official domain of the brand when highly confident, otherwise null."),
+      sentiment: sentimentSchema.describe("How the answer presents the brand."),
+      recommended: z.boolean().describe("True when the answer recommends the brand or ranks it as a top option."),
+      is_competitor: z
+        .boolean()
+        .describe(
+          "True when a user asking this question could choose the brand instead of the monitored brand: an alternative product, service or provider for the same need. Always false for the monitored brand.",
+        ),
+      highlights: z.array(z.string()).describe("Up to three concise statements the answer makes about the brand."),
     }),
   ),
 });
@@ -44,6 +48,8 @@ export interface ExtractInput {
   brandName: string;
   brandAliases: string[];
   brandDomain: string;
+  /** Overrides the configured extractor model (Settings → Models). */
+  modelId?: string;
   timeoutMs?: number;
 }
 
@@ -51,7 +57,7 @@ export const DEFAULT_EXTRACT_TIMEOUT_MS = 45_000;
 
 /** One structured-output call that names every brand in the answer and what was said about it. */
 export async function extractBrands(input: ExtractInput): Promise<ExtractedBrand[]> {
-  const model = languageModel(extractorModelId());
+  const model = languageModel(input.modelId ?? extractorModelId());
   const { output } = await generateText({
     model,
     output: Output.object({ schema: extractionSchema }),
@@ -98,10 +104,12 @@ export function normalizeExtractedBrands(
       existing.highlights = uniqueStrings([...existing.highlights, ...highlights]).slice(0, 3);
       existing.website = existing.website ?? website;
       existing.recommended = existing.recommended || row.recommended;
-      existing.isCompetitor = existing.isCompetitor || (row.is_competitor && !isSelf);
+      existing.isCompetitor = existing.isCompetitor || (!isSelf && (row.is_competitor || row.recommended));
       continue;
     }
 
+    // A brand the answer recommends for the user's need is an alternative by
+    // definition, whatever the extractor decided about the competitor flag.
     byKey.set(key, {
       name,
       key,
@@ -109,7 +117,7 @@ export function normalizeExtractedBrands(
       website,
       sentiment: row.sentiment,
       recommended: row.recommended,
-      isCompetitor: isSelf ? false : row.is_competitor,
+      isCompetitor: isSelf ? false : row.is_competitor || row.recommended,
       isSelf,
       highlights,
     });

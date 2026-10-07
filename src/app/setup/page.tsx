@@ -6,13 +6,15 @@ import { platformAvailability } from "@/lib/ai/provider";
 import { getDb } from "@/lib/db";
 import { PLATFORM_IDS } from "@/lib/platforms";
 import { getBrand } from "@/lib/queries/brand";
+import { getModelConfig } from "@/lib/queries/settings";
 
 export const metadata: Metadata = { title: "Set up" };
 
 export default async function SetupPage() {
   const db = await getDb();
   if (await getBrand(db)) redirect("/settings");
-  const platformOptions = PLATFORM_IDS.map((id) => platformAvailability(id));
+  const models = await getModelConfig(db);
+  const platformOptions = PLATFORM_IDS.map((id) => platformAvailability(id, models.platforms[id]));
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-12">

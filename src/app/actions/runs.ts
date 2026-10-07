@@ -8,6 +8,7 @@ import { getDb } from "@/lib/db";
 import { normalizePlatformList } from "@/lib/platforms";
 import { getBrand } from "@/lib/queries/brand";
 import { activeRun } from "@/lib/queries/runs";
+import { getModelConfig } from "@/lib/queries/settings";
 import { createRun } from "@/lib/runs/create";
 import { triggerRunProcessing } from "@/lib/runs/trigger";
 import { currentOrigin } from "@/lib/request";
@@ -22,7 +23,7 @@ export async function startRun(): Promise<void> {
   const running = await activeRun(db, brand.id);
   if (running) redirect(`/runs/${running.id}`);
 
-  const available = new Set(availablePlatforms());
+  const available = new Set(availablePlatforms(await getModelConfig(db)));
   const platforms = normalizePlatformList(brand.platforms).filter((p) => available.has(p));
   const { runId, totalItems } = await createRun(db, { brandId: brand.id, trigger: "manual", platforms });
   if (totalItems > 0) {

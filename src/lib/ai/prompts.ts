@@ -60,7 +60,7 @@ Return one row for every real brand that appears in the answer:
 - website: the brand's official domain only when you are highly confident; otherwise null. A citation domain is not automatically a brand website.
 - sentiment: how the answer presents the brand (positive, neutral or negative).
 - recommended: true when the answer recommends or ranks the brand as a top pick.
-- is_competitor: true only for the same product or service category, or a plausible substitute for the USER_PROMPT need. Sources, publishers, integrations, customers, underlying technologies and adjacent products are not competitors unless the answer establishes substitution. Always false for the monitored brand.
+- is_competitor: true when a user asking USER_PROMPT could choose this brand instead of the monitored brand: an alternative product, service or provider for the same need, including every option the answer lists or recommends for that need. False for sources, publishers, integrations, customers, underlying technologies and adjacent products that the answer does not present as alternatives. Always false for the monitored brand.
 - highlights: up to 3 concise facts the answer states about the brand, grounded in the answer text.
 
 Rules:
