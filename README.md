@@ -26,7 +26,7 @@ Everything about *your* brand is decided by plain text matching over the stored 
 2. Open the deployment, sign in, enter your brand, website and market, and pick the platforms.
 3. Add a few questions your customers would ask an AI assistant and press **Run now**. Answers appear within a minute.
 
-No AI key is needed on Vercel: the app authenticates to the [AI Gateway](https://vercel.com/ai-gateway) with the deployment's own identity (OIDC). Every Vercel account has a free gateway tier; beyond it you pay the providers' list prices with no markup.
+No AI key is needed on Vercel: the app authenticates to the [AI Gateway](https://vercel.com/ai-gateway) with the deployment's own identity (OIDC). **The gateway does need a positive balance**: open your Vercel team → AI Gateway → Credits and add funds before the first check, otherwise every platform request fails. You pay the providers' list prices with no markup; a few dollars cover weeks of daily checks (see [Costs](#costs)).
 
 > The Hobby plan runs cron jobs once a day with a one-hour window and stops functions after 300 seconds. The tracker is built for exactly that: the daily check is split into batches that re-invoke themselves until every answer is in.
 
@@ -40,7 +40,7 @@ cp .env.example .env.local   # set ADMIN_PASSWORD and AI_GATEWAY_API_KEY
 npm run dev
 ```
 
-Open http://localhost:3000. Without `DATABASE_URL` the app uses an embedded Postgres ([PGlite](https://pglite.dev)) stored in `./data/pglite`, so there is nothing else to install. Point `DATABASE_URL` at any Postgres to use that instead.
+Open http://localhost:3000. The gateway key belongs to a Vercel team, and that team's AI Gateway balance must be positive (Vercel → AI Gateway → Credits) or requests fail. Without `DATABASE_URL` the app uses an embedded Postgres ([PGlite](https://pglite.dev)) stored in `./data/pglite`, so there is nothing else to install. Point `DATABASE_URL` at any Postgres to use that instead.
 
 Useful scripts:
 
@@ -105,7 +105,7 @@ Ten questions on the default three platforms cost about **$0.27 per daily check*
 | `ADMIN_PASSWORD` | yes | Dashboard password. Changing it signs everyone out. |
 | `CRON_SECRET` | on Vercel | Protects `/api/cron/daily` and the background processor. Vercel Cron sends it automatically. Locally an ephemeral secret is generated. |
 | `DATABASE_URL` | on Vercel | Postgres connection string (the Deploy button provisions Neon). Empty locally = embedded PGlite. |
-| `AI_GATEWAY_API_KEY` | locally | One key for every platform. Empty on Vercel = OIDC. |
+| `AI_GATEWAY_API_KEY` | locally | One key for every platform. Empty on Vercel = OIDC. Either way the Vercel team's AI Gateway balance must be positive. |
 | `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`, `XAI_API_KEY`, `PERPLEXITY_API_KEY` | no | Direct vendor access, used only when no gateway key is set and the app is not on Vercel. A platform is available when its vendor key exists. |
 | `MODEL_CHATGPT`, `MODEL_PERPLEXITY`, `MODEL_GEMINI`, `MODEL_CLAUDE`, `MODEL_GROK`, `MODEL_EXTRACTOR` | no | Model overrides. |
 | `APP_URL` | no | Public URL, used when the processor re-invokes itself. Defaults to the request origin. |
