@@ -33,7 +33,7 @@ export default async function SettingsPage() {
         title="AI access"
         description={
           mode === "gateway"
-            ? "Requests go through the Vercel AI Gateway with one key (or the deployment's own identity on Vercel)."
+            ? "Requests go through the Vercel AI Gateway with one key (or the deployment's own identity on Vercel). The team's AI Gateway balance must be positive."
             : "Requests go directly to each vendor with its own API key. Set AI_GATEWAY_API_KEY to use one key for everything."
         }
         flush
