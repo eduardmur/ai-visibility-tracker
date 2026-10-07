@@ -6,7 +6,7 @@ Self-hosted, open source, and deliberately small. One Vercel AI Gateway key cove
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Feduardmur%2Fai-visibility-tracker&project-name=ai-visibility-tracker&repository-name=ai-visibility-tracker&env=ADMIN_PASSWORD,CRON_SECRET&envDescription=ADMIN_PASSWORD%20protects%20the%20dashboard.%20CRON_SECRET%20protects%20the%20daily%20check%20%28any%20long%20random%20string%29.&envLink=https%3A%2F%2Fgithub.com%2Feduardmur%2Fai-visibility-tracker%23configuration&products=%5B%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22neon%22%2C%22integrationSlug%22%3A%22neon%22%7D%5D)
 
-Built and maintained by [Searcherries](https://searcherries.com?utm_source=github&utm_medium=readme&utm_campaign=ai-visibility-tracker), the team behind the hosted AI visibility platform of the same name. This repository is the self-hosted version: your keys, your database, your rules. The hosted product adds Google AI Overviews, Search Console, Google Analytics and Bing data, and an MCP server for Claude, Codex and Cursor; see [Hosted version](#hosted-version) below.
+Built and maintained by [Searcherries](https://searcherries.com?utm_source=github&utm_medium=readme&utm_campaign=ai-visibility-tracker), the team behind the hosted AI visibility platform of the same name. This repository is the self-hosted version: your keys, your database, your rules. The hosted product collects with a hybrid approach: the vendors' APIs with web search, on the models each platform currently serves its users by default, plus UI-level tracking of Google AI Overviews. It also adds Search Console, Google Analytics and Bing data and an MCP server for Claude, Codex and Cursor; see [Hosted version](#hosted-version) below.
 
 ## What you get
 
@@ -121,7 +121,7 @@ The daily cron (`vercel.json`, 06:00 UTC) creates a run with every question that
 
 ## Hosted version
 
-Don't want to run it yourself? [Searcherries](https://searcherries.com?utm_source=github&utm_medium=readme&utm_campaign=ai-visibility-tracker) is the hosted version from the same team, from $13/month, model costs included. It adds Google AI Overviews, Search Console, Google Analytics and Bing data per project, calibrated answer insights, and an MCP server so Claude, Codex, Cursor and Claude Code can work on your visibility with your own numbers.
+Don't want to run it yourself? [Searcherries](https://searcherries.com?utm_source=github&utm_medium=readme&utm_campaign=ai-visibility-tracker) is the hosted version from the same team, from $13/month, model costs included. Collection is hybrid: the vendors' APIs with web search on the models each platform serves its users by default, plus UI-level tracking of Google AI Overviews. It adds Search Console, Google Analytics and Bing data per project, calibrated answer insights, and an MCP server so Claude, Codex, Cursor and Claude Code can work on your visibility with your own numbers.
 
 ## Development
 
