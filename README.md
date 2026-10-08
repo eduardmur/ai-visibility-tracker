@@ -142,4 +142,4 @@ Contributions are welcome. Keep the project small: one key, one code path per pl
 
 ## License
 
-Apache License 2.0.
+MIT.
