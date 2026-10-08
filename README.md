@@ -8,10 +8,7 @@ Self-hosted, open source, and deliberately small. One Vercel AI Gateway key cove
 
 Built and maintained by [Searcherries](https://searcherries.com?utm_source=github&utm_medium=readme&utm_campaign=ai-visibility-tracker), the team behind the hosted AI visibility platform of the same name. This repository is the self-hosted version: your keys, your database, your rules. The hosted product collects with a hybrid approach: the vendors' APIs with web search, on the models each platform currently serves its users by default, plus UI-level tracking of Google AI Overviews. It also adds Search Console, Google Analytics and Bing data and an MCP server for Claude, Codex and Cursor; see [Hosted version](#hosted-version) below.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/overview-dark.png">
-  <img alt="Overview: visibility score, trend, platforms, competitors and cited sources" src="docs/overview-light.png">
-</picture>
+![Overview: visibility score, trend, platforms, competitors and cited sources](docs/overview-dark.png)
 
 ## What you get
 
