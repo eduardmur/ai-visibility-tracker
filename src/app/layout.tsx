@@ -15,6 +15,11 @@ export const metadata: Metadata = {
     template: "%s · AI Visibility Tracker",
   },
   description: "Track how ChatGPT, Perplexity, Gemini, Claude and Grok mention, cite and describe your brand.",
+  openGraph: {
+    title: "AI Visibility Tracker",
+    description: "Track how ChatGPT, Perplexity, Gemini, Claude and Grok mention, cite and describe your brand.",
+    images: [{ url: "/thumbnail.png", width: 1440, height: 756 }],
+  },
 };
 
 /** Every page reads the tracker database at request time. */

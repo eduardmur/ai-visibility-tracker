@@ -15,6 +15,8 @@ import { scoredAnswersSince } from "@/lib/queries/answers";
 import { getBrand } from "@/lib/queries/brand";
 import { periodRange } from "@/lib/queries/period";
 import { listRuns } from "@/lib/queries/runs";
+import { isAuthenticated } from "@/lib/auth/session";
+import { DEMO_READ_ONLY_MESSAGE, isDemoMode } from "@/lib/demo";
 
 export const metadata: Metadata = { title: "Questions" };
 
@@ -38,6 +40,7 @@ export default async function QuestionsPage({ searchParams }: { searchParams: Pr
   const rows = await db.select().from(questions).where(eq(questions.brandId, brand.id)).orderBy(asc(questions.id));
   const stats = new Map(questionBreakdown(await scoredAnswersSince(db, brand.id, periodRange("30d").since)).map((s) => [s.questionId, s]));
   const runs = await listRuns(db, brand.id, 1);
+  const readOnly = isDemoMode() && !(await isAuthenticated());
 
   return (
     <>
@@ -52,6 +55,8 @@ export default async function QuestionsPage({ searchParams }: { searchParams: Pr
           ) : null
         }
       />
+
+      {readOnly ? <Notice className="mb-6">{DEMO_READ_ONLY_MESSAGE}</Notice> : null}
 
       {welcome ? (
         <Notice className="mb-6">

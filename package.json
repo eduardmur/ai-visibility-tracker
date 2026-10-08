@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "tsx src/lib/db/migrate.ts && next build",
+    "build": "tsx src/lib/db/migrate.ts && tsx scripts/seed-demo.ts --only-in-demo-mode && next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",

@@ -2,7 +2,7 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { isAuthenticated } from "@/lib/auth/session";
+import { writeDenied } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { questions, type QuestionCadence } from "@/lib/db/schema";
 import { getBrand } from "@/lib/queries/brand";
@@ -20,7 +20,8 @@ function cadenceOf(value: FormDataEntryValue | null): QuestionCadence {
 }
 
 export async function addQuestions(_previous: QuestionFormState, formData: FormData): Promise<QuestionFormState> {
-  if (!(await isAuthenticated())) return { error: "Unauthorized", added: 0 };
+  const denied = await writeDenied();
+  if (denied) return { error: denied, added: 0 };
   const db = await getDb();
   const brand = await getBrand(db);
   if (!brand) return { error: "Set up your brand first.", added: 0 };
@@ -49,7 +50,7 @@ export async function addQuestions(_previous: QuestionFormState, formData: FormD
 }
 
 export async function updateQuestion(formData: FormData): Promise<void> {
-  if (!(await isAuthenticated())) return;
+  if (await writeDenied()) return;
   const db = await getDb();
   const brand = await getBrand(db);
   const id = Number(formData.get("id"));

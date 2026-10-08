@@ -18,6 +18,8 @@ Built and maintained by [Searcherries](https://searcherries.com?utm_source=githu
 
 Everything about *your* brand is decided by plain text matching over the stored answer, never by a model, so each number can be reproduced from the data in your own database. A small model call only extracts the *other* brands an answer names and what it says about them.
 
+[Live demo](https://ai-visibility-tracker-demo.vercel.app) with sample data (read-only).
+
 ## Deploy to Vercel in five minutes
 
 1. Click **Deploy with Vercel** above. It clones this repository, provisions a free Neon Postgres database, and asks for two values:
@@ -101,6 +103,7 @@ Current per-token prices are on the [AI Gateway model list](https://vercel.com/a
 | `MODEL_CHATGPT`, `MODEL_PERPLEXITY`, `MODEL_GEMINI`, `MODEL_CLAUDE`, `MODEL_GROK`, `MODEL_EXTRACTOR` | no | Model defaults for a deployment. Values saved on the Settings page take precedence. |
 | `APP_URL` | no | Public URL, used when the processor re-invokes itself. Defaults to the request origin. |
 | `RUN_BATCH_BUDGET_MS` | no | Wall-clock budget of one processing invocation (default 140 000). Raise it on Vercel Pro together with `maxDuration`. |
+| `DEMO_MODE` | no | `1` turns a deployment into a public read-only demo with sample data seeded at build time. Never set it on a real tracker. |
 
 Bring your own keys and skip the gateway if you prefer: set the vendor keys instead of `AI_GATEWAY_API_KEY`. The same prompts, tools and parsing apply; only the transport changes.
 

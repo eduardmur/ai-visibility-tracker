@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { normalizeDomain } from "@/lib/analysis/mentions";
-import { isAuthenticated } from "@/lib/auth/session";
+import { writeDenied } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { brands } from "@/lib/db/schema";
 import { isCountryCode, isLanguageCode } from "@/lib/markets";
@@ -27,7 +27,8 @@ const brandSchema = z.object({
 });
 
 export async function saveBrand(_previous: BrandFormState, formData: FormData): Promise<BrandFormState> {
-  if (!(await isAuthenticated())) return { error: "Unauthorized", saved: false };
+  const denied = await writeDenied();
+  if (denied) return { error: denied, saved: false };
 
   const parsed = brandSchema.safeParse({
     name: formData.get("name"),

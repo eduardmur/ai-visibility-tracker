@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { isAuthenticated } from "@/lib/auth/session";
+import { writeDenied } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { EXTRACTOR_KEY, PLATFORMS, PLATFORM_IDS, isModelId } from "@/lib/platforms";
 import { saveModelOverrides } from "@/lib/queries/settings";
@@ -13,7 +13,8 @@ export interface ModelsFormState {
 
 /** Saves the per-platform and extractor model ids. Empty fields fall back to the defaults. */
 export async function saveModels(_previous: ModelsFormState, formData: FormData): Promise<ModelsFormState> {
-  if (!(await isAuthenticated())) return { error: "Unauthorized", saved: false };
+  const denied = await writeDenied();
+  if (denied) return { error: denied, saved: false };
 
   const overrides: Record<string, string> = {};
   for (const key of [...PLATFORM_IDS, EXTRACTOR_KEY]) {

@@ -1,6 +1,7 @@
 import { after } from "next/server";
 import { availablePlatforms } from "@/lib/ai/provider";
 import { getDb } from "@/lib/db";
+import { isDemoMode } from "@/lib/demo";
 import { isInternalRequest, runBatchBudgetMs } from "@/lib/env";
 import { normalizePlatformList } from "@/lib/platforms";
 import { getBrand } from "@/lib/queries/brand";
@@ -24,6 +25,8 @@ export async function GET(request: Request): Promise<Response> {
   if (!isInternalRequest(request)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  if (isDemoMode()) return Response.json({ skipped: "demo mode" });
 
   const db = await getDb();
   const brand = await getBrand(db);

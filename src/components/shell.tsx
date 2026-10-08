@@ -1,8 +1,9 @@
-import { FileText, LayoutDashboard, LogOut, MessageSquareText, Play, Settings, Users } from "lucide-react";
+import { ExternalLink, FileText, LayoutDashboard, LogOut, MessageSquareText, Play, Settings, Users } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { logout } from "@/app/actions/auth";
 import { startRun } from "@/app/actions/runs";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { Brand, Run } from "@/lib/db/schema";
@@ -17,7 +18,19 @@ const NAV = [
   { href: "/settings", label: "Settings", Icon: Settings },
 ];
 
-function RunControl({ running, full }: { running: Run | null; full?: boolean }) {
+const REPO_URL = "https://github.com/eduardmur/ai-visibility-tracker";
+
+function RunControl({ running, full, readOnly }: { running: Run | null; full?: boolean; readOnly?: boolean }) {
+  if (readOnly) {
+    return (
+      <Button asChild variant="outline" className={full ? "w-full" : undefined}>
+        <a href={REPO_URL} target="_blank" rel="noreferrer">
+          Deploy your own
+          <ExternalLink data-icon="inline-end" />
+        </a>
+      </Button>
+    );
+  }
   if (running) {
     return (
       <Button asChild variant="outline" className={full ? "w-full" : undefined}>
@@ -38,7 +51,18 @@ function RunControl({ running, full }: { running: Run | null; full?: boolean }) 
   );
 }
 
-export function Shell({ brand, running, children }: { brand: Brand; running: Run | null; children: ReactNode }) {
+export function Shell({
+  brand,
+  running,
+  readOnly = false,
+  children,
+}: {
+  brand: Brand;
+  running: Run | null;
+  /** Demo deployment viewed without the admin session: no mutations, no logout. */
+  readOnly?: boolean;
+  children: ReactNode;
+}) {
   return (
     <div className="flex min-h-screen">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r bg-sidebar lg:flex">
@@ -47,9 +71,14 @@ export function Shell({ brand, running, children }: { brand: Brand; running: Run
             {brand.name}
           </Link>
           <p className="truncate text-xs text-muted-foreground">{brand.domain}</p>
+          {readOnly ? (
+            <Badge variant="secondary" className="mt-2">
+              Demo · sample data
+            </Badge>
+          ) : null}
         </div>
         <div className="px-3">
-          <RunControl running={running} full />
+          <RunControl running={running} full readOnly={readOnly} />
         </div>
         <nav className="mt-4 flex flex-col gap-0.5 px-3" aria-label="Main">
           {NAV.map(({ href, label, Icon }) => (
@@ -63,11 +92,13 @@ export function Shell({ brand, running, children }: { brand: Brand; running: Run
           <Separator className="mb-4" />
           <div className="flex items-center justify-between gap-2">
             <ThemeToggle />
-            <form action={logout}>
-              <Button type="submit" variant="ghost" size="icon-sm" aria-label="Log out" title="Log out">
-                <LogOut />
-              </Button>
-            </form>
+            {readOnly ? null : (
+              <form action={logout}>
+                <Button type="submit" variant="ghost" size="icon-sm" aria-label="Log out" title="Log out">
+                  <LogOut />
+                </Button>
+              </form>
+            )}
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
             Open source by{" "}
@@ -94,7 +125,7 @@ export function Shell({ brand, running, children }: { brand: Brand; running: Run
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <RunControl running={running} />
+              <RunControl running={running} readOnly={readOnly} />
             </div>
           </div>
           <nav className="flex gap-1 overflow-x-auto px-3 pb-2" aria-label="Main">

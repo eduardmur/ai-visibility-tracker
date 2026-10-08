@@ -1,6 +1,7 @@
 import { after } from "next/server";
 import { isAuthenticated } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
+import { isDemoMode } from "@/lib/demo";
 import { isInternalRequest, runBatchBudgetMs } from "@/lib/env";
 import { processRun } from "@/lib/runs/process";
 import { triggerRunProcessing } from "@/lib/runs/trigger";
@@ -18,6 +19,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!isInternalRequest(request) && !(await isAuthenticated())) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (isDemoMode()) return Response.json({ skipped: "demo mode" });
   const { id } = await context.params;
   const runId = Number(id);
   if (!Number.isInteger(runId) || runId <= 0) {

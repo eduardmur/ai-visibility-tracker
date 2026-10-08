@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { logout } from "@/app/actions/auth";
-import { Muted, PageHeader, Section } from "@/components/blocks";
+import { Muted, Notice, PageHeader, Section } from "@/components/blocks";
 import { BrandForm } from "@/components/brand-form";
 import { ModelsForm, type ModelRow } from "@/components/models-form";
 import { Button } from "@/components/ui/button";
 import { extractorAvailability, platformAvailability, transport } from "@/lib/ai/provider";
+import { isAuthenticated } from "@/lib/auth/session";
 import { databaseUrl, getDb } from "@/lib/db";
+import { DEMO_READ_ONLY_MESSAGE, isDemoMode } from "@/lib/demo";
 import { EXTRACTOR_KEY, PLATFORMS, PLATFORM_IDS, resolveModelConfig } from "@/lib/platforms";
 import { getBrand } from "@/lib/queries/brand";
 import { getModelOverrides } from "@/lib/queries/settings";
@@ -21,6 +23,7 @@ export default async function SettingsPage() {
   const extractor = extractorAvailability(models.extractor);
   const mode = transport();
   const cronConfigured = Boolean(process.env.CRON_SECRET);
+  const readOnly = isDemoMode() && !(await isAuthenticated());
 
   const modelRows: ModelRow[] = [
     ...platformOptions.map((option) => ({
@@ -46,6 +49,7 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeader title="Settings" />
+      {readOnly ? <Notice className="mb-6">{DEMO_READ_ONLY_MESSAGE}</Notice> : null}
 
       <Section title="Brand" description="Changes apply to the next check. Stored answers are not re-analyzed.">
         <BrandForm brand={brand} platformOptions={platformOptions} submitLabel="Save" />

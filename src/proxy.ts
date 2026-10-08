@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, isValidSessionToken } from "@/lib/auth/token";
+import { isDemoMode } from "@/lib/demo";
 
 /** Paths that authenticate themselves (shared secret) or must stay public. */
 const PUBLIC_PREFIXES = ["/login", "/api/cron/", "/api/internal/"];
@@ -8,6 +9,11 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
 
   if (PUBLIC_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(prefix))) {
+    return NextResponse.next();
+  }
+
+  // A demo deployment is readable by everyone; server actions refuse writes themselves.
+  if (isDemoMode()) {
     return NextResponse.next();
   }
 

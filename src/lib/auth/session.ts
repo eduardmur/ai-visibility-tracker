@@ -1,5 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { DEMO_READ_ONLY_MESSAGE, isDemoMode } from "@/lib/demo";
 import {
   SESSION_COOKIE,
   SESSION_MAX_AGE_SECONDS,
@@ -44,4 +45,13 @@ export async function createSession(): Promise<void> {
 export async function destroySession(): Promise<void> {
   const store = await cookies();
   store.delete(SESSION_COOKIE);
+}
+
+/**
+ * Null when the current request may change data, otherwise the message to show.
+ * Visitors of a demo deployment can read everything but write nothing.
+ */
+export async function writeDenied(): Promise<string | null> {
+  if (await isAuthenticated()) return null;
+  return isDemoMode() ? DEMO_READ_ONLY_MESSAGE : "Unauthorized";
 }
