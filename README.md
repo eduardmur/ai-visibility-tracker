@@ -4,7 +4,7 @@ Track how **ChatGPT, Perplexity, Gemini, Claude and Grok** answer the questions 
 
 Self-hosted, open source, and deliberately small. One Vercel AI Gateway key covers every platform, each platform answers with its **own native web search**, and the whole thing deploys to Vercel with one click.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Feduardmur%2Fai-visibility-tracker&project-name=ai-visibility-tracker&repository-name=ai-visibility-tracker&env=ADMIN_PASSWORD,CRON_SECRET&envDescription=ADMIN_PASSWORD%20protects%20the%20dashboard.%20CRON_SECRET%20protects%20the%20daily%20check%20%28any%20long%20random%20string%29.&envLink=https%3A%2F%2Fgithub.com%2Feduardmur%2Fai-visibility-tracker%23configuration&products=%5B%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22neon%22%2C%22integrationSlug%22%3A%22neon%22%7D%5D)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Feduardmur%2Fai-visibility-tracker&project-name=ai-visibility-tracker&repository-name=ai-visibility-tracker&env=ADMIN_PASSWORD,CRON_SECRET&envDescription=ADMIN_PASSWORD%20protects%20the%20dashboard.%20CRON_SECRET%20protects%20the%20daily%20check%20%28any%20long%20random%20string%29.&envLink=https%3A%2F%2Fgithub.com%2Feduardmur%2Fai-visibility-tracker%23configuration&products=%5B%7B%22type%22%3A%22integration%22%2C%22group%22%3A%22postgres%22%7D%5D)
 
 Built and maintained by [Searcherries](https://searcherries.com?utm_source=github&utm_medium=readme&utm_campaign=ai-visibility-tracker), the team behind the hosted AI visibility platform of the same name. This repository is the self-hosted version: your keys, your database, your rules. The hosted product collects with a hybrid approach: the vendors' APIs with web search, on the models each platform currently serves its users by default, plus UI-level tracking of Google AI Overviews. It also adds Search Console, Google Analytics and Bing data and an MCP server for Claude, Codex and Cursor; see [Hosted version](#hosted-version) below.
 
@@ -24,7 +24,7 @@ Everything about *your* brand is decided by plain text matching over the stored 
 
 ## Deploy to Vercel in five minutes
 
-1. Click **Deploy with Vercel** above. It clones this repository, provisions a free Neon Postgres database, and asks for two values:
+1. Click **Deploy with Vercel** above. It clones this repository, lets you pick a Postgres database from the Vercel Marketplace (Neon has a free tier), and asks for two values:
    - `ADMIN_PASSWORD`: the password for the dashboard.
    - `CRON_SECRET`: any long random string (`openssl rand -hex 32`). Vercel Cron uses it for the daily check.
 2. Open the deployment, sign in, enter your brand, website and market, and pick the platforms.
