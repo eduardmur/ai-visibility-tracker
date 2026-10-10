@@ -67,7 +67,7 @@ export default async function SettingsPage() {
         <ModelsForm rows={modelRows} />
       </Section>
 
-      <Section className="mt-6" title="Schedule" description="A daily check runs at 06:00 UTC through Vercel Cron (vercel.json). Weekly questions are included once every seven days.">
+      <Section className="mt-6" title="Schedule" description={isDemoMode() ? "This demo runs no real checks: the daily cron rebuilds the sample history instead." : "A daily check runs at 06:00 UTC through Vercel Cron (vercel.json). Weekly questions are included once every seven days."}>
         {cronConfigured ? (
           <Muted>CRON_SECRET is set. The scheduled check and the background processor are protected.</Muted>
         ) : (

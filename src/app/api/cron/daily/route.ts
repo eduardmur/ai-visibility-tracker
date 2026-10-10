@@ -2,6 +2,7 @@ import { after } from "next/server";
 import { availablePlatforms } from "@/lib/ai/provider";
 import { getDb } from "@/lib/db";
 import { isDemoMode } from "@/lib/demo";
+import { seedDemoData } from "@/lib/demo-seed";
 import { isInternalRequest, runBatchBudgetMs } from "@/lib/env";
 import { normalizePlatformList } from "@/lib/platforms";
 import { getBrand } from "@/lib/queries/brand";
@@ -26,9 +27,14 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (isDemoMode()) return Response.json({ skipped: "demo mode" });
-
   const db = await getDb();
+  if (isDemoMode()) {
+    // The demo never runs real checks; the daily cron rebuilds the sample
+    // history instead so its report periods always end today.
+    const result = await seedDemoData(db, { reset: true });
+    return Response.json({ demo: "reseeded", ...result });
+  }
+
   const brand = await getBrand(db);
   if (!brand) return Response.json({ skipped: "no brand configured" });
 
