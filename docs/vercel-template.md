@@ -17,7 +17,7 @@ Form: https://vercel.com/templates/submit (sign in with the Vercel account that 
 | Field | Value |
 |---|---|
 | Template name | AI Visibility Tracker |
-| Description (≤140 chars) | Track how ChatGPT, Perplexity, Gemini, Claude and Grok mention and cite your brand. One AI Gateway key, one-click deploy. |
+| Description (≤140 chars) | Open-source AEO/GEO tracker: see how AI assistants mention, cite and recommend your brand. One AI Gateway key, one-click deploy. |
 | Demo URL | https://ai-visibility-tracker-demo.vercel.app |
 | GitHub URL | https://github.com/eduardmur/ai-visibility-tracker |
 | Branch | main |
