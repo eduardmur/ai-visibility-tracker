@@ -1,6 +1,6 @@
 # AI Visibility Tracker
 
-Track how **ChatGPT, Perplexity, Gemini, Claude and Grok** answer the questions your customers ask: whether they mention your brand, cite your website, which competitors they recommend instead, and what they say about each one.
+Open-source **AEO/GEO tracker**: see how AI assistants answer the questions your customers ask, whether they mention your brand, cite your website, which competitors they recommend instead, and what they say about each one.
 
 Self-hosted, open source, and deliberately small. One Vercel AI Gateway key covers every platform, each platform answers with its **own native web search**, and the whole thing deploys to Vercel with one click.
 
